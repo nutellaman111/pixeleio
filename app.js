@@ -1,3 +1,6 @@
+const {NewUser} = require('./js/newUser.js');
+
+
 const express = require('express')
 const app = express()
 
@@ -10,6 +13,7 @@ app.use(express.static('public'))
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html')
 })
+
 
 //my stuff!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -26,23 +30,26 @@ const squares = Array.from({ length: x }, (row, rowIndex) =>
   }))
 );
 
-squares[0][2].on = true;
+const users = {};
 
 io.on('connection', (socket) => {
   console.log('a user connected');
 
-  socket.emit('b.canvas', squares)
+  socket.emit('b.canvas', squares);
 
-  socket.on("f.inputChange", (inputValue) => {
-    io.emit('b.inputChange', inputValue)
-  })
+  let newUser = NewUser(socket.id);
+  socket.emit('b.user', newUser);
 
   socket.on('f.square', (fSquare) => {
     squares[fSquare.x][fSquare.y].on = fSquare.on;
     io.emit('b.square', squares[fSquare.x][fSquare.y]);
   });
 
+  socket.on('f.message', (message) => {
+    io.emit('b.message', message)
+  })
 }); 
+
 
 server.listen(port, () => {
   console.log(`Example app listening on port ${port}`)

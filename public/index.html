@@ -6,18 +6,25 @@
     <link rel="stylesheet" href="styles.css">
     <title>Paint Grid</title>
 </head>
+
 <body>
+  
+    <div class="container">
+        <div class="grid" id="grid"></div>
+        <div class="chat" id="chat">
+            <h2>Ch- ch- ch- chat</h2>
+            <div class="messages" id="messages"></div>
+            <div class="input-container">
+              <input type="text" id="messageInput" placeholder="Type a message..." />
+              <button id="sendButton">Send</button>
+          </div>
+        </div>
+    </div>
 
-
-<div class="grid" id="grid"></div>
-
-<!-- <script
-src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.10.2/gsap.min.js"
-integrity="sha512-kVlGhj2qFy+KBCFuvjBJTGUMxbdqJKs4yK2jh0e0VPhWUPiPC87bzm4THmaaIee3Oj7j6sDpTTgm2EPPiESqBg=="
-crossorigin="anonymous"
-referrerpolicy="no-referrer"
-></script>-->
-<script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
-<script src="./js/index.js"></script>
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+    <script src="./js/index.js"></script>
+    <script src="./js/paintEmit.js"></script>
+    <script src="./js/paintRecieve.js"></script>
+    <script src="./js/chat.js"></script>
 </body>
 </html>
