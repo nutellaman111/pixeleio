@@ -31,14 +31,24 @@ const squares = Array.from({ length: x }, (row, rowIndex) =>
 );
 
 const users = {};
+const systemUser = {
+  id: 0,
+  name: 'system'
+}
+systemUser.name = '[system]'
 
 io.on('connection', (socket) => {
   console.log('a user connected');
 
   socket.emit('b.canvas', squares);
 
-  let newUser = NewUser(socket.id);
-  socket.emit('b.user', newUser);
+  socket.on('f.user', (fUser) => {
+    users[socket.id] = {
+        id: socket.id,
+        name: fUser.name
+    };
+  })
+  console.log("hiii");
 
   socket.on('f.square', (fSquare) => {
     squares[fSquare.x][fSquare.y].on = fSquare.on;
@@ -46,9 +56,24 @@ io.on('connection', (socket) => {
   });
 
   socket.on('f.message', (message) => {
+    message.author = users[socket.id];
     io.emit('b.message', message)
   })
+
+  socket.on('disconnect', (reason) => {
+    if(users[socket.id])
+    {
+      const message = {
+        author: systemUser,
+        content: users[socket.id].name + " has left"
+      }
+      io.emit('b.message', message)
+  
+      delete users[socket.id];
+    }
+  })
 }); 
+
 
 
 server.listen(port, () => {

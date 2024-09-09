@@ -21,7 +21,7 @@ function sendMessage() {
             author: user,
             content: content
         }
-        displayMessage(message); // Display your own message  
+        //displayMessage(message); // Display your own message  
         messageInput.value = ''; // Clear the input field
 
         socket.emit('f.message', message);
@@ -29,7 +29,7 @@ function sendMessage() {
 }
 
 socket.on('b.message', (message) => {
-    if(message.author.id != user.id)
+    if(/*message.author.id != user.id*/true)
     {
         displayMessage(message)
     }
