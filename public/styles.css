@@ -1,0 +1,22 @@
+
+#myInput {
+    width: 100%;
+    max-width: 500px;
+    padding: 15px;
+    font-size: 1.5rem;
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    outline: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+#myInput:focus {
+    border-color: #007BFF;
+    box-shadow: 0 6px 12px rgba(0, 123, 255, 0.2);
+}
+
+#myInput::placeholder {
+    color: #aaa;
+    font-style: italic;
+}
