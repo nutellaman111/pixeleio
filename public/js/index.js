@@ -1,45 +1,88 @@
-const canvas = document.querySelector('canvas')
-const c = canvas.getContext('2d')
-
 const socket = io();
 
+const grid = document.getElementById('grid');
+document.addEventListener('dragstart', (e) => e.preventDefault());
 
+let squares = null;
 
-const input = document.getElementById('myInput');
+socket.on('b.canvas', (bSquares) => {
+  squares = bSquares;
+  for(let y = 0; y < 10; y++)
+  {
+    for(let x = 0; x < 10; x++)
+    {
+      const squareDiv = document.createElement('div');
+      squareDiv.classList.add('square');
 
-input.addEventListener('input', function() {
-  socket.emit('f.inputChange', input.value);
-});
+      grid.appendChild(squareDiv);
+      squares[x][y].div = squareDiv;
+      RenderSquare(squares[x][y])
 
-socket.on('b.inputChange', (inputValue) => {
-  input.value = inputValue;
+    }
+  }
 })
 
-//idk lollllllllllllllllllllllllllllllllllllllllll:
+const mouse = {
+  0: false,
+  2: false
+};
 
+// Add event listeners to the grid squares
+grid.addEventListener('mousedown', (e) => {
+    e.preventDefault();
 
+    mouse[e.button] = true;
 
+    handleMouseAction(e);
+});
 
+grid.addEventListener('mouseup', (e) => {
 
-const scoreEl = document.querySelector('#scoreEl')
+    mouse[e.button] = false;
+});
 
-canvas.width = innerWidth
-canvas.height = innerHeight
+grid.addEventListener('contextmenu', (e) => e.preventDefault()); // Disable right-click menu
 
-const x = canvas.width / 2
-const y = canvas.height / 2
+grid.addEventListener('mousemove', (e) => {
+    handleMouseAction(e);
+});
 
-const player = new Player(x, y, 10, 'white')
+function handleMouseAction(e) {
 
+  if(mouse[0] == mouse[2]) //if holding both or neither butttons, return
+  {
+    return
+  }
 
-let animationId
-let score = 0
-function animate() {
-  animationId = requestAnimationFrame(animate)
-  c.fillStyle = 'rgba(0, 0, 0, 0.1)'
-  c.fillRect(0, 0, canvas.width, canvas.height)
+  let square = SquareFromDiv(e.target) //return if not on a square
+  if(square == null)
+  {
+    return;
+  }
 
-  player.draw()
+  let leftClick = mouse[0];
+  if(square.on == leftClick) //return if the state of the square is equal to the input
+  {
+    return;
+  }
+
+  square.on = leftClick;
+  RenderSquare(square)
+
+  socket.emit('f.square', square);
 }
 
-animate()
+socket.on('b.square', (bSquare) => {
+  squares[bSquare.x][bSquare.y].on = bSquare.on;
+  RenderSquare(squares[bSquare.x][bSquare.y]);
+});
+
+function SquareFromDiv(element)
+{
+  return squares.flat().find(square => square.div === element);
+}
+
+function RenderSquare(square)
+{
+  square.div.style.backgroundColor = square.on? 'black' : 'white';
+}
