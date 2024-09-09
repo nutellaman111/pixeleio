@@ -4,7 +4,10 @@
     "socket.io": "^4.6.1"
   },
   "scripts": {
-    "start": "node ."
-}
-  
+    "openshift": "nodeshift --expose --dockerImage=registry.access.redhat.com/rhscl/ubi8/nodejs-12",
+    "start": "node app.js"
+  },
+  "devDependencies": {
+    "nodeshift": "^11.3.0"
+  }
 }
