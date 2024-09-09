@@ -1,5 +1,5 @@
-const {NewUser} = require('./js/newUser.js');
-
+const {DivideSquaresToPeople} = require('./utils.js');
+{
 
 const express = require('express')
 const app = express()
@@ -17,9 +17,8 @@ app.get('/', (req, res) => {
 
 //my stuff!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-
-const x = 10; // Change this to the desired number of rows
-const y = 10; // Change this to the desired number of columns
+const x = 12; // Change this to the desired number of rows
+const y = 20; // Change this to the desired number of columns
 
 // Initialize the 2D array
 const squares = Array.from({ length: x }, (row, rowIndex) =>
@@ -33,20 +32,27 @@ const squares = Array.from({ length: x }, (row, rowIndex) =>
 const users = {};
 const systemUser = {
   id: 0,
-  name: 'system'
+  name: 'system',
+  color: '#000000'
 }
 systemUser.name = '[system]'
 
 io.on('connection', (socket) => {
   console.log('a user connected');
 
-  socket.emit('b.canvas', squares);
-
+  //someone submitted their username and 
   socket.on('f.user', (fUser) => {
     users[socket.id] = {
         id: socket.id,
-        name: fUser.name
+        name: fUser.name,
+        color: fUser.color
     };
+    //send the full canvas to the new player
+    socket.emit('b.users', users)
+    socket.emit('b.canvas', squares);
+
+    //send the player list to the player
+    OnPlayersChange()
   })
   console.log("hiii");
 
@@ -56,7 +62,6 @@ io.on('connection', (socket) => {
   });
 
   socket.on('f.message', (message) => {
-    message.author = users[socket.id];
     io.emit('b.message', message)
   })
 
@@ -70,15 +75,31 @@ io.on('connection', (socket) => {
       io.emit('b.message', message)
   
       delete users[socket.id];
+      OnPlayersChange();
     }
   })
 }); 
 
-
+function OnPlayersChange()
+{
+  io.emit('b.users', users)
+  for (const userId in users) {
+    if (users.hasOwnProperty(userId)) {
+        const user = users[userId];
+        // Process the user object here
+        console.log(user.name);
+    }
+  }
+  
+  if(users)
+  {
+    DivideSquaresToPeople(squares, users);
+    io.emit('b.canvas-ownership', squares)
+  }
+}
 
 server.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
 })
 
-console.log("server farting");
-
+}

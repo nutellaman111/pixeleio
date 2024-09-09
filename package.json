@@ -1,7 +1,8 @@
 {
   "dependencies": {
     "express": "4.18.2",
-    "socket.io": "^4.6.1"
+    "socket.io": "^4.6.1",
+    "tinycolor2": "^1.6.0"
   },
   "scripts": {
     "openshift": "nodeshift --expose --dockerImage=registry.access.redhat.com/rhscl/ubi8/nodejs-12",

@@ -12,9 +12,13 @@
     <div id="usernameOverlay" class="overlay">
       <div class="overlay-content">
           <h2>Please enter your username:</h2>
-          <input type="text" id="usernameInput" placeholder="Username" />
+          <div class="input-container">
+            <input type="text" id="usernameInput" placeholder="Username" class="textInput" />
+            <input type="color" id="colorPicker" name="colorPicker" value="#ff0000">
+          </div>
           <button id="submitUsername">Submit</button>
       </div>
+
     </div>
 
   
@@ -32,14 +36,16 @@
             <h2>CHAT!</h2>
             <div class="messages" id="messages"></div>
             <div class="input-container">
-              <input type="text" id="messageInput" placeholder="Type a message..." />
+              <input class="textInput" type="text" id="messageInput" placeholder="Type a message..." />
               <button id="sendButton">Send</button>
           </div>
         </div>
+        
     </div>
 
     <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
-    <script src="./js/username.js"></script>
+    <script src="./js/colorUtils.js"></script>
+    <script src="./js/usernameEnter.js"></script>
     <script src="./js/index.js"></script>
     <script src="./js/paintEmit.js"></script>
     <script src="./js/paintRecieve.js"></script>

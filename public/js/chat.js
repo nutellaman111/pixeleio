@@ -18,10 +18,9 @@ function sendMessage() {
     if(content)
     {
         const message = {
-            author: user,
+            authorId: socket.id,
             content: content
         }
-        //displayMessage(message); // Display your own message  
         messageInput.value = ''; // Clear the input field
 
         socket.emit('f.message', message);
@@ -29,18 +28,19 @@ function sendMessage() {
 }
 
 socket.on('b.message', (message) => {
-    if(/*message.author.id != user.id*/true)
-    {
-        displayMessage(message)
-    }
+    displayMessage(message)
 })
 
 
 // Function to display a message
 function displayMessage(message) {
+
+    let author = users[message.authorId];
+
     const messageElement = document.createElement('div');
     messageElement.classList.add('message');
-    messageElement.innerHTML = `<strong>${message.author.name}:</strong> ${message.content}`;
+    messageElement.innerHTML = `<strong>${author.name}:</strong> ${message.content}`;
+    messageElement.style.color = author.color;
     messagesContainer.appendChild(messageElement);
     messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll to the latest message
 }

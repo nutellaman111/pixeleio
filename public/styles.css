@@ -1,14 +1,11 @@
 .grid {
     display: grid;
-
     background-color: red;
 }
 
 .square {
-    width: 50px;
-    height: 50px;
     background-color: white;
-    border: 1px solid #ddd;
+    border: 0.1px solid #ddd;
 }
 
 .square.painted {
@@ -46,24 +43,19 @@ body {
     flex: 1;
     overflow-y: auto;
     margin-bottom: 10px;
-    border: 1px solid #ddd;
     padding: 5px;
     max-height: 400px;
-    background-color: #f9f9f9;
+    background-color: #eee3ed;
 }
 
 .message {
-    margin-bottom: 10px;
+    margin-bottom: 5px;
     padding: 5px;
     border-radius: 5px;
-    background-color: #e1e1e1;
+    background-color: #ffffff;
     overflow-wrap: break-word; /* Another property to ensure long words wrap */
 
-}
 
-input[type="text"] {
-    width: calc(100% - 90px);
-    padding: 5px;
 }
 
 button {
@@ -75,6 +67,7 @@ button {
 .input-container {
     display: flex;
     align-items: center;
+    justify-content: space-between;
 }
 
 .overlay {
@@ -88,6 +81,11 @@ button {
     align-items: center;
     justify-content: center;
     z-index: 1000;
+}
+
+.textInput {
+    flex-grow: 1;
+    padding: 5px;
 }
 
 .overlay-content {
