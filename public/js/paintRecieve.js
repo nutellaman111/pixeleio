@@ -11,7 +11,7 @@ socket.on('b.canvas', (bSquares) => {
 
   grid.innerHTML = '';
 
-  const size = 500/(Math.max(width,height));
+  const size = 480/(Math.max(width,height));
   grid.style.gridTemplateColumns = `repeat(${width}, ${size}px)`;
   grid.style.gridTemplateRows = `repeat(${height}, ${size}px)`;
 
@@ -94,26 +94,39 @@ function RenderSquare(square) {
     let borderLeft = '0';
 
     let color = users[ownerId] ? users[ownerId].color : 'black';
+    
     console.log(color);
-    // Check the neighbor to the top
-    if (y - 1 < 0 || squares[x][y - 1].ownerId !== ownerId) {
-        borderTop = `2px solid ${color}`; // Set border width and color
-    }
 
+    const small = `4px solid ${color}`
+    const big = `7px solid ${color}`
+    
+    if (y - 1 < 0) {
+      borderTop = big; // Set border width and color
+    } else if (squares[x][y - 1].ownerId !== ownerId) {
+      borderTop = small;
+    }
+    
     // Check the neighbor to the right
-    if (x + 1 >= width || squares[x + 1][y].ownerId !== ownerId) {
-        borderRight = `2px solid ${color}`;
+    if (x + 1 >= width) {
+      borderRight = big;
+    } else if (squares[x + 1][y].ownerId !== ownerId) {
+      borderRight = small;
     }
-
+    
     // Check the neighbor to the bottom
-    if (y + 1 >= height || squares[x][y + 1].ownerId !== ownerId) {
-        borderBottom = `2px solid ${color}`;
+    if (y + 1 >= height) {
+      borderBottom = big;
+    } else if (squares[x][y + 1].ownerId !== ownerId) {
+      borderBottom = small;
     }
-
+    
     // Check the neighbor to the left
-    if (x - 1 < 0 || squares[x - 1][y].ownerId !== ownerId) {
-        borderLeft = `2px solid ${color}`;
+    if (x - 1 < 0) {
+      borderLeft = big;
+    } else if (squares[x - 1][y].ownerId !== ownerId) {
+      borderLeft = small;
     }
+    
 
     // Apply borders to the square
     const element = square.div;

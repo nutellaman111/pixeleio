@@ -15,10 +15,10 @@ app.get('/', (req, res) => {
 })
 
 
-//my stuff!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//my stuff!!!!!!!!!! !!!!!!!!!!!!!!!!!!!!!!! 
 
-const x = 12; // Change this to the desired number of rows
-const y = 20; // Change this to the desired number of columns
+const x = 14; // Change this to the desired number of rows
+const y = 14; // Chan ge this to the desired number of columns
 
 // Initialize the 2D array
 const squares = Array.from({ length: x }, (row, rowIndex) =>
@@ -33,7 +33,7 @@ const users = {};
 const systemUser = {
   id: 0,
   name: 'system',
-  color: '#000000'
+  color: '#000000',
 }
 systemUser.name = '[system]'
 
@@ -45,7 +45,9 @@ io.on('connection', (socket) => {
     users[socket.id] = {
         id: socket.id,
         name: fUser.name,
-        color: fUser.color
+        color: fUser.color,
+        x: 0,
+        y: 0
     };
     //send the full canvas to the new player
     socket.emit('b.users', users)
@@ -57,10 +59,18 @@ io.on('connection', (socket) => {
   console.log("hiii");
 
   socket.on('f.square', (fSquare) => {
-    squares[fSquare.x][fSquare.y].on = fSquare.on;
-    io.emit('b.square', squares[fSquare.x][fSquare.y]);
+    let square = squares[fSquare.x][fSquare.y];
+    if(square.ownerId == socket.id)
+    {
+      square.on = fSquare.on;
+      io.emit('b.square', square);
+    }
+    else
+    {
+      socket.emit('b.square', square);
+    }
   });
-
+//
   socket.on('f.message', (message) => {
     io.emit('b.message', message)
   })
@@ -82,15 +92,9 @@ io.on('connection', (socket) => {
 
 function OnPlayersChange()
 {
+  console.log("!! users " + users)  
+  console.log("!! users is " + (users? true : false))  
   io.emit('b.users', users)
-  for (const userId in users) {
-    if (users.hasOwnProperty(userId)) {
-        const user = users[userId];
-        // Process the user object here
-        console.log(user.name);
-    }
-  }
-  
   if(users)
   {
     DivideSquaresToPeople(squares, users);

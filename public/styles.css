@@ -1,11 +1,19 @@
+:root {
+    --userColor: #4b4f75; /* Default value */
+  }
+
+.userColored {
+color: var(--userColor);
+}
+
 .grid {
     display: grid;
-    background-color: red;
+    background-color: white;
+    padding: 10px;
 }
 
 .square {
     background-color: white;
-    border: 0.1px solid #ddd;
 }
 
 .square.painted {

@@ -2,10 +2,11 @@
     const username = document.getElementById('usernameInput');
     const gameContainer = document.getElementById('gameContainer')
     const usernameOverlay = document.getElementById('usernameOverlay')
-    const gameDisplay = gameContainer.style.display;
+    const gameDisplayType = gameContainer.style.display;
+    const grid = document.getElementById('grid')
 
     const colorPicker = document.getElementById('colorPicker');
-    const maxAllowedColorLuminance = 40;
+    const maxAllowedColorLuminance = 60;
     colorPicker.value = hslToHex(getRandomHslColor(maxAllowedColorLuminance))
     username.style.color = colorPicker.value;
 
@@ -32,12 +33,15 @@
         if (username.value) {
             localStorage.setItem('username', username.value); // Save username to localStorage
             usernameOverlay.style.display = 'none'; // Hide overlay
-            gameContainer.style.display = gameDisplay;
+            gameContainer.style.display = gameDisplayType;
 
             const newUser = {
                 name: username.value,
                 color: colorPicker.value
             };
+
+            document.documentElement.style.setProperty('--userColor', newUser.color);
+
             
             socket.emit('f.user', newUser);
         } else {
@@ -48,12 +52,17 @@
     // Display game content and hide overlay if username already exists
     window.onload = function() {
         
-        if(true)
+        if(true) //debug
         {
             const alphabet = 'abcdefghijklmnopqrstuvwxyz';
             const name = alphabet[Math.floor(Math.random() * alphabet.length)] + alphabet[Math.floor(Math.random() * alphabet.length)];
 
             username.value = name;
+
+            const colorPicker = document.getElementById('colorPicker');
+            const maxAllowedColorLuminance = 60;
+            colorPicker.value = hslToHex(getRandomHslColor(maxAllowedColorLuminance))
+
             usernameSubmit();
         }
         else
