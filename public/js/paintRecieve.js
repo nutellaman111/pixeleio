@@ -11,7 +11,7 @@ socket.on('b.canvas', (bSquares) => {
 
   grid.innerHTML = '';
 
-  const size = 480/(Math.max(width,height));
+  const size = 400/(Math.max(width,height)); //480 for a perfect fit
   grid.style.gridTemplateColumns = `repeat(${width}, ${size}px)`;
   grid.style.gridTemplateRows = `repeat(${height}, ${size}px)`;
 
@@ -134,6 +134,8 @@ function RenderSquare(square) {
     element.style.borderRight = borderRight;
     element.style.borderBottom = borderBottom;
     element.style.borderLeft = borderLeft;
+
+    element.style.cursor = square.ownerId == socket.id ? 'crosshair' : 'default';
 }
 
 //ass

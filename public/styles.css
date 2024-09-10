@@ -6,6 +6,8 @@
 color: var(--userColor);
 }
 
+
+/*grid-----------------------*/
 .grid {
     display: grid;
     background-color: white;
@@ -25,6 +27,18 @@ body {
     font-family: Arial, sans-serif;
 }
 
+.hover-text {
+    position: fixed; /* Changed to fixed */
+    display: none;
+    background-color: #2ecc71;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    z-index: 5;
+}
+
+
+/*game container-----------------------*/
 .container {
     display: flex;
     justify-content: center;
@@ -35,7 +49,7 @@ body {
     background-color: rgb(179, 111, 137);
 }
 
-
+/*chat---------------------------------*/
 .chat {
     margin-left: 20px;
     width: 300px; /* Adjust as needed */
@@ -45,6 +59,8 @@ body {
     background-color: #fff;
     display: flex;
     flex-direction: column;
+    border-radius: 5px;
+
 }
 
 .messages {
@@ -53,7 +69,7 @@ body {
     margin-bottom: 10px;
     padding: 5px;
     max-height: 400px;
-    background-color: #eee3ed;
+    background-color: #eec5eb;
 }
 
 .message {
@@ -62,22 +78,21 @@ body {
     border-radius: 5px;
     background-color: #ffffff;
     overflow-wrap: break-word; /* Another property to ensure long words wrap */
-
-
 }
 
-button {
+button { /*send button*/
     width: 80px;
     padding: 5px;
     margin-left: 10px;
 }
 
-.input-container {
+.input-container { /*message input*/
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
 
+/*username screen---------------------------*/
 .overlay {
     position: fixed;
     top: 0;
@@ -103,40 +118,42 @@ button {
     text-align: center;
 }
 
+/*player list---------------------------------------*/
 .player-list {
     margin-right: 20px;
-    width: 300px;
-    height: 500px; /* Adjust as needed */
     box-sizing: border-box;
     background-color: #fff;
     padding: 10px;
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
     overflow-y: auto;
+    max-width: 300px; /* Adjust as needed */
+    max-height: 500px; /* Adjust as needed */
+    border-radius: 5px;
+
 }
 
 .player {
     display: flex;
     align-items: center;
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
+    background-color: #4b4f75;
+    margin-bottom: 5px;
+    padding: 5px;
+    border-radius: 5px;
+    overflow-wrap: break-word; /* Another property to ensure long words wrap */
 }
 
-.player img {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
+.player-icon {
+    width: 32px;
+    height: 32px;
     margin-right: 10px;
 }
 
-.player .info {
-    flex: 1;
-}
-
-.player .name {
+.player-name {
     font-weight: bold;
+    margin-right: 10px;
+    color: white;
 }
 
-.player .score {
-    margin-left: 10px;
-    color: #666;
+.player-score {
+    color: #555;
 }

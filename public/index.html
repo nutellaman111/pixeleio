@@ -9,46 +9,48 @@
 
 <body>
 
-    <div id="usernameOverlay" class="overlay">
-      <div class="overlay-content">
-          <h2>Please enter your username:</h2>
-          <div class="input-container">
-            <input type="text" id="usernameInput" placeholder="Username" class="textInput" />
-            <input type="color" id="colorPicker" name="colorPicker" value="#ff0000">
-          </div>
-          <button id="submitUsername">Submit</button>
-      </div>
+  <div class="hover-text" id="hoverText">I follow the cursor!</div>
 
+  <div id="usernameOverlay" class="overlay">
+    <div class="overlay-content">
+        <h2>Please enter your username:</h2>
+        <div class="input-container">
+          <input type="text" id="usernameInput" placeholder="Username" class="textInput" />
+          <input type="color" id="colorPicker" name="colorPicker" value="#ff0000">
+        </div>
+        <button id="submitUsername">Submit</button>
     </div>
+
+  </div>
 
   
-    <div class="container" id = "gameContainer">
+  <div class="container" id = "gameContainer">
 
-        <div class="player-list userColored" id="playerList">
-          <h2>Players</h2>
-          <div id="players"></div>
+      <div class="player-list" id="playerList">
+        <h2 class="userColored">Players</h2>
+        <div id="players"></div>
+      </div>
 
+      <div class="grid" id="grid"></div>
+
+      <div class="chat" id="chat">
+          <h2 class="userColored">CHAT!</h2>
+          <div class="messages" id="messages"></div>
+          <div class="input-container">
+            <input class="textInput" type="text" id="messageInput" placeholder="Type a message..." />
+            <button id="sendButton">Send</button>
         </div>
+      </div>
+      
+  </div>
 
-        <div class="grid" id="grid"></div>
-
-        <div class="chat" id="chat">
-            <h2 class="userColored">CHAT!</h2>
-            <div class="messages" id="messages"></div>
-            <div class="input-container">
-              <input class="textInput" type="text" id="messageInput" placeholder="Type a message..." />
-              <button id="sendButton">Send</button>
-          </div>
-        </div>
-        
-    </div>
-
-    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
-    <script src="./js/colorUtils.js"></script>
-    <script src="./js/usernameEnter.js"></script>
-    <script src="./js/index.js"></script>
-    <script src="./js/paintEmit.js"></script>
-    <script src="./js/paintRecieve.js"></script>
-    <script src="./js/chat.js"></script>
+  <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+  <script src="./js/colorUtils.js"></script>
+  <script src="./js/usernameEnter.js"></script>
+  <script src="./js/index.js"></script>
+  <script src="./js/paintEmit.js"></script>
+  <script src="./js/paintRecieve.js"></script>
+  <script src="./js/chat.js"></script>
+  <script src="./js/squaresLabel.js"></script>
 </body>
 </html>

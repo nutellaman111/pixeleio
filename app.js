@@ -56,7 +56,6 @@ io.on('connection', (socket) => {
     //send the player list to the player
     OnPlayersChange()
   })
-  console.log("hiii");
 
   socket.on('f.square', (fSquare) => {
     let square = squares[fSquare.x][fSquare.y];
@@ -70,7 +69,7 @@ io.on('connection', (socket) => {
       socket.emit('b.square', square);
     }
   });
-//
+  
   socket.on('f.message', (message) => {
     io.emit('b.message', message)
   })

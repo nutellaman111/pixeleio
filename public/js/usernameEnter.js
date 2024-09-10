@@ -52,7 +52,7 @@
     // Display game content and hide overlay if username already exists
     window.onload = function() {
         
-        if(true) //debug
+        if(false) //debug
         {
             const alphabet = 'abcdefghijklmnopqrstuvwxyz';
             const name = alphabet[Math.floor(Math.random() * alphabet.length)] + alphabet[Math.floor(Math.random() * alphabet.length)];

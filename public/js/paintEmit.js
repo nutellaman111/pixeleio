@@ -39,11 +39,17 @@ function handleMouseAction(e) {
   let square = SquareFromDiv(e.target) //return if not on a square
   if(square == null)
   {
+    console.log("not square");
     return;
   }
 
   let leftClick = mouse[0];
   if(square.on == leftClick) //return if the state of the square is equal to the input
+  {
+    return;
+  }
+
+  if(square.ownerId != socket.id) //return if the square isnt owned by this user
   {
     return;
   }
