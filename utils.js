@@ -57,11 +57,16 @@ function DivideSquaresToPeople(squares, users) {
 }
 
 function GetUsersArray(users) {
-  // Get the keys (user IDs) from the users object
-  const userIds = Object.keys(users);
-  
-  // Map over the user IDs to get the user objects
-  return userIds.map(id => users[id]);
+  if(users)
+  {
+    // Get the keys (user IDs) from the users object
+    const userIds = Object.keys(users);
+    
+    // Map over the user IDs to get the user objects
+    return userIds.map(id => users[id]);
+  }
+  return [];
+
 }
 
 module.exports = { DivideSquaresToPeople, GetUsersArray };

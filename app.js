@@ -52,17 +52,10 @@ class GameRoom {
   {
     this.roomCode = roomCode;
 
-    const x = 10; // Change this to the desired number of rows
-    const y = 10; // Chan ge this to the desired number of columns
+    this.gridWidth = 10; // Change this to the desired number of rows
+    this.gridHeight = 10; // Chan ge this to the desired number of columns
     
-    // Initialize the 2D array
-    this.squares = Array.from({ length: x }, (row, rowIndex) =>
-      Array.from({ length: y }, (col, colIndex) => ({
-        on: false,
-        x: rowIndex,
-        y: colIndex
-      }))
-    );
+    this.ResetBoard()
 
     this.users = {};
     this.systemUser = {
@@ -72,6 +65,18 @@ class GameRoom {
     }
 
     this.PlayerConnected(creatorSocket, fUser)
+  }
+
+  ResetBoard()
+  {
+    this.squares = Array.from({ length: this.gridWidth }, (row, rowIndex) =>
+      Array.from({ length: this.gridHeight }, (col, colIndex) => ({
+        on: false,
+        x: rowIndex,
+        y: colIndex
+      }))
+    );
+    this.DivideSquaresToArtists();
   }
 
   PlayerConnected(socket, fUser)
@@ -151,21 +156,36 @@ class GameRoom {
 
   HandleCommand(socketId, message)
   {
-    const content = message.content;
-    if(content == '/draw')
+    const parts = message.content.trim().split(/\s+/); // Split by spaces
+    const commandName = parts[0]; // First part is the command name
+    const parameters = parts.slice(1).map(param => {
+        if (!isNaN(param)) {
+            return Number(param); // Convert to number if it's a valid number
+        }
+        return param; // Leave it as a string if it's not a number
+    });
+
+    if(commandName == '/draw')
     {
       this.users[socketId].drawing = true;
       this.OnPlayersChange();
     }
-    if(content == '/guess')
+    if(commandName == '/guess')
     {
       this.users[socketId].drawing = false;
       this.OnPlayersChange();
     }
-    else if(content == '/guessed')
+    else if(commandName == '/guessed')
     {
       this.users[socketId].guessed = true;
       this.OnPlayersChange();
+    }
+    else if(commandName == '/size')
+    {
+      this.gridWidth = parameters[0];
+      this.gridHeight = parameters[1];
+      this.ResetBoard();
+      EmitToUserObject(this.users, 'b.canvas', this.squares)
     }
   }
 
@@ -173,10 +193,15 @@ class GameRoom {
   {
     EmitToUserObject(this.users, 'b.users', this.users)
 
-    const usersArr = GetUsersArray(this.users).filter(user => user.drawing);
+    this.DivideSquaresToArtists();
 
-    DivideSquaresToPeople(this.squares, usersArr);
     EmitToUserObject(this.users, 'b.canvas-ownership', this.squares)
+  }
+
+  DivideSquaresToArtists()
+  {
+    const usersArr = GetUsersArray(this.users).filter(user => user.drawing);
+    DivideSquaresToPeople(this.squares, usersArr);
   }
 }
 
