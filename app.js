@@ -120,7 +120,11 @@ class GameRoom {
       else
       {
         let sendTo;
-        if(!currentUser.drawing)
+        if(currentUser.drawing)
+        {
+          sendTo = GetUsersArray(this.users).filter(x => x.guessed || x.id == socket.id)
+        }
+        else
         {
           if(currentUser.guessed)
           {
@@ -131,10 +135,7 @@ class GameRoom {
             sendTo = GetUsersArray(this.users);
           }
         }
-        else
-        {
-          sendTo = GetUsersArray(this.users).filter(x => x.guessed)
-        }
+
         EmitToUsersArray(sendTo, 'b.message', message)
       }
     })
@@ -167,16 +168,19 @@ class GameRoom {
 
     if(commandName == '/draw')
     {
+      this.users[socketId].guessed = false;
       this.users[socketId].drawing = true;
       this.OnPlayersChange();
     }
     if(commandName == '/guess')
     {
+      this.users[socketId].guessed = false;
       this.users[socketId].drawing = false;
       this.OnPlayersChange();
     }
     else if(commandName == '/guessed')
     {
+      this.users[socketId].drawing = false;
       this.users[socketId].guessed = true;
       this.OnPlayersChange();
     }

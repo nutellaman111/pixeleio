@@ -5,6 +5,7 @@ socket.on('b.users', (bUsers) => {
   users = bUsers;
   thisUser = users[socket.id];
   RenderUserList();
+  UpdateMessagestSentTo();
 })
 
 function RenderUserList()

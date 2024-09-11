@@ -2,6 +2,7 @@
 const messageInput = document.getElementById('messageInput');
 const sendButton = document.getElementById('sendButton');
 const messagesContainer = document.getElementById('messages');
+const messagesSentToElement = document.getElementById('sentTo');
 
 // Event listener for sending a message
 sendButton.addEventListener('click', sendMessage);
@@ -43,4 +44,19 @@ function displayMessage(message) {
     messageElement.style.color = author.color;
     messagesContainer.appendChild(messageElement);
     messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll to the latest message
+}
+
+function UpdateMessagestSentTo()
+{
+    let textResult;
+    if(thisUser.guessed)
+    {
+        textResult = "Messages visible to people who are drawing or have guessed the word"
+    } else if(thisUser.drawing)
+    {
+        textResult = "Messages visible to people who have guessed the word"
+    } else { //guessing
+        textResult = "Messages visible to everyone"
+    }
+    messagesSentToElement.textContent = textResult;
 }

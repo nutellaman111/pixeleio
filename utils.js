@@ -14,8 +14,6 @@ function DivideSquaresToPeople(squares, users) {
     i = i+1;
   });
 
-
-
   // Helper function to calculate distance between two points
   function getDistance(x1, y1, x2, y2) {
     return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
@@ -24,7 +22,7 @@ function DivideSquaresToPeople(squares, users) {
   // Iterate through the squares and assign the nearest user
   squares.forEach(innerArray =>
     innerArray.forEach(square => {
-      const DISTANCE_THRESHOLD = 0.01; // Define a small threshold to handle rounding errors
+      const DISTANCE_THRESHOLD = 0.001; // Define a small threshold to handle rounding errors
 
       let nearestUsers = [];
       let minDistance = Infinity; // Initialize with Infinity
