@@ -52,22 +52,52 @@ class GameRoom {
   {
     this.roomCode = roomCode;
 
-    this.gridWidth = 10; // Change this to the desired number of rows
-    this.gridHeight = 10; // Chan ge this to the desired number of columns
+    this.gridWidth = 12; // Change this to the desired number of rows
+    this.gridHeight = 12; // Chan ge this to the desired number of columns
     
-    this.ResetBoard()
-
     this.users = {};
     this.systemUser = {
       id: 0,
       name: '[system]',
       color: '#000000',
     }
+    this.words = require("./data/words.json");
+    console.log(this.words);
 
-    this.PlayerConnected(creatorSocket, fUser)
+    this.NewRound();
+    this.PlayerConnected(creatorSocket, fUser);
   }
 
-  ResetBoard()
+  NewRound()
+  {
+    this.ResetAndDivideBoard()
+    this.SetRandomWord();
+    EmitToUserObject(this.users, 'b.users', this.users)
+    EmitToUserObject(this.users, 'b.canvas', this.squares);
+    this.EmitWord();
+  }
+
+  SetRandomWord()
+  {
+    const randomIndex = Math.floor(Math.random() * Math.min(this.words.length, 1000)); //words sorted from easy to hard - pick from the 1000 easiest
+    console.log(randomIndex + " ?")
+    console.log(this.words + " ?")
+    console.log(this.words[randomIndex] + " ?")
+    this.word = this.words[randomIndex].replace('-',' ');
+    this.words.splice(randomIndex, 1);
+  }
+  
+  EmitWord()
+  {
+    let allowedPeople = GetUsersArray(this.users).filter(x=>x.drawing || x.guessed)
+    EmitToUsersArray(allowedPeople, 'b.word', this.word)
+
+    let censoredWord = this.word.replace(' ', '-').replace(/[a-zA-Z]/g, " _ ");
+    let unallowedPeople = GetUsersArray(this.users).filter(x=>!x.drawing && !x.guessed)
+    EmitToUsersArray(unallowedPeople, 'b.word', censoredWord)
+  }
+
+  ResetAndDivideBoard()
   {
     this.squares = Array.from({ length: this.gridWidth }, (row, rowIndex) =>
       Array.from({ length: this.gridHeight }, (col, colIndex) => ({
@@ -76,7 +106,7 @@ class GameRoom {
         y: colIndex
       }))
     );
-    this.DivideSquaresToArtists();
+    this.DivideSquares();
   }
 
   PlayerConnected(socket, fUser)
@@ -98,6 +128,7 @@ class GameRoom {
 
     //send the player list to the player
     this.OnPlayersChange()
+    this.EmitWord();
   
     socket.on('f.square', (fSquare) => {
       let square = this.squares[fSquare.x][fSquare.y];
@@ -188,8 +219,12 @@ class GameRoom {
     {
       this.gridWidth = parameters[0];
       this.gridHeight = parameters[1];
-      this.ResetBoard();
+      this.ResetAndDivideBoard();
       EmitToUserObject(this.users, 'b.canvas', this.squares)
+    }
+    else if(commandName == '/round')
+    {
+      this.NewRound();
     }
   }
 
@@ -197,12 +232,12 @@ class GameRoom {
   {
     EmitToUserObject(this.users, 'b.users', this.users)
 
-    this.DivideSquaresToArtists();
+    this.DivideSquares();
 
     EmitToUserObject(this.users, 'b.canvas-ownership', this.squares)
   }
 
-  DivideSquaresToArtists()
+  DivideSquares()
   {
     const usersArr = GetUsersArray(this.users).filter(user => user.drawing);
     DivideSquaresToPeople(this.squares, usersArr);

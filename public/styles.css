@@ -9,7 +9,7 @@ color: var(--userColor);
 /*big stuff----------------------*/
 
   
-  #mainTitle {
+#wordDisplay {
     font-size: 2.5em; /* Adjust title size */
     margin: 10px auto 10px auto; /* Center horizontally with auto margins */
     display: inline-block; /* Prevent full width occupation */
