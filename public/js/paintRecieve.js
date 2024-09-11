@@ -92,7 +92,7 @@ function RenderSquare(square) {
     let borderBottom = '0';
     let borderLeft = '0';
 
-    let color = users[ownerId] ? users[ownerId].color : 'black';
+    let color = users[ownerId] ? users[ownerId].color : '#ff00ff';
     
     const small = `2px solid ${color}`
     const big = `5px solid ${color}`

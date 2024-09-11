@@ -6,6 +6,19 @@
 color: var(--userColor);
 }
 
+/*big stuff----------------------*/
+
+  
+  #mainTitle {
+    font-size: 2.5em; /* Adjust title size */
+    margin: 10px auto 10px auto; /* Center horizontally with auto margins */
+    display: inline-block; /* Prevent full width occupation */
+  }
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
 
 /*canvas-----------------------*/
 
@@ -27,15 +40,12 @@ color: var(--userColor);
     background-color: black;
 }
 
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-}
+
 
 .hover-text {
     position: fixed; /* Changed to fixed */
     display: none;
-    background-color: #2ecc71;
+    background-color: #ff00ff;
     color: white;
     padding: 5px 10px;
     border-radius: 5px;
@@ -70,12 +80,19 @@ body {
 /*game container-----------------------*/
 .container {
     display: flex;
-    justify-content: center;
-    align-items: flex-start;
     height: 100vh;
-    padding: 20px;
+    padding-bottom: 200px;
     box-sizing: border-box;
     background-color: rgb(179, 111, 137);
+    flex-direction: column; /* Arrange items top to bottom */
+    align-items: center; /* Center the content horizontally */
+}
+
+/*game container-----------------------*/
+.leftToRight {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
 }
 
 /*chat---------------------------------*/
@@ -157,7 +174,7 @@ button { /*send button*/
     padding: 10px;
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
     overflow-y: auto;
-    max-width: 300px; /* Adjust as needed */
+    width: 300px; /* Adjust as needed */
     max-height: 500px; /* Adjust as needed */
     border-radius: 5px;
 
@@ -170,7 +187,7 @@ button { /*send button*/
     margin-bottom: 5px;
     padding: 5px;
     border-radius: 5px;
-    overflow-wrap: break-word; /* Another property to ensure long words wrap */
+    overflow-wrap: break-word; 
 }
 
 .player-icon {

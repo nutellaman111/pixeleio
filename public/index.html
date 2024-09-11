@@ -10,6 +10,7 @@
 
 <body>
 
+
   <div class="hover-text" id="hoverText">I follow the cursor!</div>
 
   <div id="usernameOverlay" class="overlay">
@@ -31,6 +32,13 @@
   
   <div class="container" id = "gameContainer">
 
+    <div class="leftToRight" style="gap: 20px;">
+      <span id="mainTitle">Game Title</span> <!-- Add this title element -->
+      <span id="mainTitle">time</span> <!-- Add this title element -->
+
+    </div>
+
+    <div class="leftToRight">
       <div class="player-list" id="playerList">
         <h2 class="userColored">Players</h2>
         <div id="players"></div>
@@ -49,13 +57,14 @@
             <button id="sendButton">Send</button>
         </div>
       </div>
-      
+    </div>
   </div>
 
   <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
   <script src="./js/colorUtils.js"></script>
   <script src="./js/usernameEnter.js"></script>
   <script src="./js/index.js"></script>
+  <script src="./js/userList.js"></script>
   <script src="./js/paintEmit.js"></script>
   <script src="./js/paintRecieve.js"></script>
   <script src="./js/chat.js"></script>

@@ -80,9 +80,12 @@ class GameRoom {
         id: socket.id,
         name: fUser.name,
         color: fUser.color,
+        drawing: false,
+        guessed: false,
         x: 0,
         y: 0
     };
+    let currentUser = this.users[socket.id]
 
     //send the full canvas to the new player
     socket.emit('b.users', this.users)
@@ -93,7 +96,7 @@ class GameRoom {
   
     socket.on('f.square', (fSquare) => {
       let square = this.squares[fSquare.x][fSquare.y];
-      if(square.ownerId == socket.id)
+      if(square.ownerId == socket.id && this.users[socket.id].drawing)
       {
         square.on = fSquare.on;
         EmitToUserObject(this.users, 'b.square', square);
@@ -105,7 +108,30 @@ class GameRoom {
     });
     
     socket.on('f.message', (message) => {
-      EmitToUserObject(this.users, 'b.message', message)
+      if(message.content[0]=='/')
+      {
+        this.HandleCommand(socket.id, message);
+      }
+      else
+      {
+        let sendTo;
+        if(!currentUser.drawing)
+        {
+          if(currentUser.guessed)
+          {
+            sendTo = GetUsersArray(this.users).filter(x => x.guessed || x.drawing)
+          }
+          else
+          {
+            sendTo = GetUsersArray(this.users);
+          }
+        }
+        else
+        {
+          sendTo = GetUsersArray(this.users).filter(x => x.guessed)
+        }
+        EmitToUsersArray(sendTo, 'b.message', message)
+      }
     })
   
     socket.on('disconnect', (reason) => {
@@ -123,14 +149,34 @@ class GameRoom {
     })
   }
 
+  HandleCommand(socketId, message)
+  {
+    const content = message.content;
+    if(content == '/draw')
+    {
+      this.users[socketId].drawing = true;
+      this.OnPlayersChange();
+    }
+    if(content == '/guess')
+    {
+      this.users[socketId].drawing = false;
+      this.OnPlayersChange();
+    }
+    else if(content == '/guessed')
+    {
+      this.users[socketId].guessed = true;
+      this.OnPlayersChange();
+    }
+  }
+
   OnPlayersChange()
   {
     EmitToUserObject(this.users, 'b.users', this.users)
-    if(this.users)
-    {
-      DivideSquaresToPeople(this.squares, this.users);
-      EmitToUserObject(this.users, 'b.canvas-ownership', this.squares)
-    }
+
+    const usersArr = GetUsersArray(this.users).filter(user => user.drawing);
+
+    DivideSquaresToPeople(this.squares, usersArr);
+    EmitToUserObject(this.users, 'b.canvas-ownership', this.squares)
   }
 }
 

@@ -20,7 +20,7 @@
             }
             else
             {
-                hoverText.textContent = "unowned";
+                hoverText.textContent = "[unowned]";
             }
             hoverText.style.left = e.pageX + 10 + 'px';
             hoverText.style.top = e.pageY + 10 + 'px';

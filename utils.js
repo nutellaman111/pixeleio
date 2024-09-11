@@ -5,15 +5,12 @@ function DivideSquaresToPeople(squares, users) {
   const width = squares.length;
   const height = squares[0].length;
 
-  const userIds = Object.keys(users);
-
   // Assign random positions to each user
   let i = 0;
-  userIds.forEach(userId => {
+  users.forEach(user => {
 
-    users[userId].x = (packing[userIds.length][i].x + 0.5) * (width-1);
-    users[userId].y = (packing[userIds.length][i].y + 0.5) * (height-1);
-    console.log(users[userId].x + " " + users[userId].y)
+    user.x = (packing[users.length][i].x + 0.5) * (width-1);
+    user.y = (packing[users.length][i].y + 0.5) * (height-1);
     i = i+1;
   });
 
@@ -29,23 +26,31 @@ function DivideSquaresToPeople(squares, users) {
     innerArray.forEach(square => {
       const DISTANCE_THRESHOLD = 0.01; // Define a small threshold to handle rounding errors
 
-      let nearestUserIds = [];
+      let nearestUsers = [];
       let minDistance = Infinity; // Initialize with Infinity
       
       // Find the minimum distance
-      userIds.forEach(userId => {
-        const distance = getDistance(square.x, square.y, users[userId].x, users[userId].y);
+      users.forEach(user => {
+        const distance = getDistance(square.x, square.y, user.x, user.y);
         if (distance < minDistance - DISTANCE_THRESHOLD) {
           minDistance = distance;
-          nearestUserIds = [userId]; // Start a new list with the current userId
+          nearestUsers = [user]; // Start a new list with the current userId
         } else if (Math.abs(distance - minDistance) < DISTANCE_THRESHOLD) {
-          nearestUserIds.push(userId); // Add to the list of nearest users
+          nearestUsers.push(user); // Add to the list of nearest users
           console.log("tie!");
         }
       });
       
-      const randomIndex = Math.floor(Math.random() * nearestUserIds.length);
-      square.ownerId = nearestUserIds[randomIndex];
+      if(nearestUsers.length)
+      {
+        const randomIndex = Math.floor(Math.random() * nearestUsers.length);
+        square.ownerId = nearestUsers[randomIndex].id;
+      }
+      else
+      {
+        square.ownerId = null;
+      }
+
       
     })
   );
