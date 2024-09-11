@@ -1,5 +1,6 @@
 {
     const username = document.getElementById('usernameInput');
+    const roomInput = document.getElementById('roomInput');
     const gameContainer = document.getElementById('gameContainer')
     const usernameOverlay = document.getElementById('usernameOverlay')
     const gameDisplayType = gameContainer.style.display;
@@ -30,7 +31,7 @@
 
     function usernameSubmit()
     {
-        if (username.value) {
+        if (username.value && roomInput.value) {
             localStorage.setItem('username', username.value); // Save username to localStorage
             usernameOverlay.style.display = 'none'; // Hide overlay
             gameContainer.style.display = gameDisplayType;
@@ -41,11 +42,11 @@
             };
 
             document.documentElement.style.setProperty('--userColor', newUser.color);
-
-            
-            socket.emit('f.user', newUser);
+            roomCode = roomInput.value;
+ 
+            socket.emit('f.user', {newUser,roomCode});
         } else {
-            alert('Please enter a username.');
+            alert('Please enter things');
         }
     }
 
@@ -76,6 +77,4 @@
         }
     
     };
-
-
 }
