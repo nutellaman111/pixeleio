@@ -40,6 +40,11 @@ function EmitToUsersArray(usersToEmit, eventName, eventData)
   });
 }
 
+function EmitToUserObject(usersToEmit, eventName, eventData)
+{
+  EmitToUsersArray(GetUsersArray(usersToEmit), eventName, eventData);
+}
+
 
 //my stuff!!!!!!!!!! !!!!!!!!!!!!!!!!!!!!!!! 
 class GameRoom {
@@ -47,8 +52,8 @@ class GameRoom {
   {
     this.roomCode = roomCode;
 
-    const x = 14; // Change this to the desired number of rows
-    const y = 14; // Chan ge this to the desired number of columns
+    const x = 10; // Change this to the desired number of rows
+    const y = 10; // Chan ge this to the desired number of columns
     
     // Initialize the 2D array
     this.squares = Array.from({ length: x }, (row, rowIndex) =>
@@ -91,7 +96,7 @@ class GameRoom {
       if(square.ownerId == socket.id)
       {
         square.on = fSquare.on;
-        EmitToUsersArray(GetUsersArray(this.users), 'b.square', square);
+        EmitToUserObject(this.users, 'b.square', square);
       }
       else
       {
@@ -100,7 +105,7 @@ class GameRoom {
     });
     
     socket.on('f.message', (message) => {
-      EmitToUsersArray(GetUsersArray(this.users), 'b.message', message)
+      EmitToUserObject(this.users, 'b.message', message)
     })
   
     socket.on('disconnect', (reason) => {
@@ -110,7 +115,7 @@ class GameRoom {
           author: this.systemUser,
           content: this.users[socket.id].name + " has left"
         }
-        EmitToUsersArray(GetUsersArray(this.users), 'b.message', message)
+        EmitToUserObject(this.users, 'b.message', message)
     
         delete this.users[socket.id];
         this.OnPlayersChange();
@@ -120,11 +125,11 @@ class GameRoom {
 
   OnPlayersChange()
   {
-    EmitToUsersArray(GetUsersArray(this.users), 'b.users', this.users)
+    EmitToUserObject(this.users, 'b.users', this.users)
     if(this.users)
     {
       DivideSquaresToPeople(this.squares, this.users);
-      EmitToUsersArray(GetUsersArray(this.users), 'b.canvas-ownership', this.squares)
+      EmitToUserObject(this.users, 'b.canvas-ownership', this.squares)
     }
   }
 }

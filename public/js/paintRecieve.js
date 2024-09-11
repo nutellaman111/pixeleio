@@ -1,5 +1,4 @@
 const grid = document.getElementById('grid');
-
 let squares = null;
 let width;
 let height;
@@ -80,7 +79,7 @@ socket.on('b.square', (bSquare) => {
 
 function RenderSquare(square) {
 
-    square.div.style.backgroundColor = square.on? 'black' : 'white';
+    square.div.style.backgroundColor = square.on;
 
     // Get the owner of the current square
     const ownerId = square.ownerId;
@@ -95,10 +94,8 @@ function RenderSquare(square) {
 
     let color = users[ownerId] ? users[ownerId].color : 'black';
     
-    console.log(color);
-
-    const small = `4px solid ${color}`
-    const big = `7px solid ${color}`
+    const small = `2px solid ${color}`
+    const big = `5px solid ${color}`
     
     if (y - 1 < 0) {
       borderTop = big; // Set border width and color
@@ -135,7 +132,5 @@ function RenderSquare(square) {
     element.style.borderBottom = borderBottom;
     element.style.borderLeft = borderLeft;
 
-    element.style.cursor = square.ownerId == socket.id ? 'crosshair' : 'default';
+    element.style.cursor = square.ownerId == socket.id ? 'crosshair' : 'no-drop';
 }
-
-//ass

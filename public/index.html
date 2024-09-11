@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <title>Paint Grid</title>
 </head>
 
@@ -35,7 +36,10 @@
         <div id="players"></div>
       </div>
 
-      <div class="grid" id="grid"></div>
+      <div class="canvas-container">
+        <div class="grid" id="grid"></div>
+        <div class="color-palette" id="colorPalette"></div>
+      </div>
 
       <div class="chat" id="chat">
           <h2 class="userColored">CHAT!</h2>
@@ -56,5 +60,6 @@
   <script src="./js/paintRecieve.js"></script>
   <script src="./js/chat.js"></script>
   <script src="./js/squaresLabel.js"></script>
+  <script src="./js/pallete.js"></script>
 </body>
 </html>
