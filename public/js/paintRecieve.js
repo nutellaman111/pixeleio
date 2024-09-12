@@ -71,7 +71,7 @@ socket.on('b.canvas-ownership', (bSquares) => {
 
 
 socket.on('b.square', (bSquare) => {
-  squares[bSquare.x][bSquare.y].on = bSquare.color;
+  squares[bSquare.x][bSquare.y].color = bSquare.color;
   RenderSquare(squares[bSquare.x][bSquare.y]);
 });
 
