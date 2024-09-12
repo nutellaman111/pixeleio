@@ -9,16 +9,40 @@ color: var(--userColor);
 /*big stuff----------------------*/
 
   
-#wordDisplay {
-    font-size: 2.5em; /* Adjust title size */
-    margin: 10px auto 10px auto; /* Center horizontally with auto margins */
-    display: inline-block; /* Prevent full width occupation */
-  }
+
 
 body {
     margin: 0;
     font-family: Arial, sans-serif;
 }
+
+/*above canvas-------------------*/
+
+#wordDisplay {
+    font-size: 2.5em; /* Adjust title size */
+    display: inline-block; /* Prevent full width occupation */
+    margin: 20px;
+  }
+
+.checkbox-block {
+    display: flex;
+    align-items: center;
+    margin: 20px;
+}
+.checkbox-block input[type="checkbox"] {
+    width: 30px;
+    height: 30px;
+}
+.checkbox-block .text-container {
+    margin-left: 10px;
+}
+.checkbox-block .big-text {
+    font-size: 24px;
+}
+.checkbox-block .small-text {
+    font-size: 14px;
+}
+
 
 /*canvas-----------------------*/
 

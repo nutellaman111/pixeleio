@@ -32,8 +32,14 @@
   
   <div class="container" id = "gameContainer">
 
-    <div class="leftToRight" style="gap: 20px;">
+    <div class="leftToRight" style="gap: 20px; align-items: center;">
       <span id="wordDisplay"></span> <!-- Add this title element -->
+      <div class="checkbox-block" id="rerollBlock">
+        <input type="checkbox" id="rerollCheckbox">
+        <div class="text-container">
+            <div class="big-text" id="rerollText">Big Text</div>
+        </div>
+      </div>
     </div>
 
     <div class="leftToRight">
@@ -70,5 +76,6 @@
   <script src="./js/squaresLabel.js"></script>
   <script src="./js/pallete.js"></script>
   <script src="./js/wordDisplay.js"></script>
+  <script src="./js/reroll.js"></script>
 </body>
 </html>

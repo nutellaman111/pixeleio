@@ -32,36 +32,40 @@
 
   function handleMouseAction(e) {
 
-    if(mouse[0] == mouse[2]) //if holding both or neither butttons, return
-    {
-      return
-    }
-
     let square = SquareFromDiv(e.target) //return if not on a square
     if(square == null)
     {
       return;
     }
 
-    if(square.ownerId != socket.id) //return if the square isnt owned by this user
+    //right click = color pick
+    if(mouse[2]) //if holding both or neither butttons, return
     {
-      return;
+      selectColorByHex(square.color)
     }
 
-    let leftClick = mouse[0];
-    let colorToPaint = leftClick? selectedColor : "#ffffff";
-
-    if(square.on == colorToPaint) //return if the state of the square is equal to the input
+    //left click = draw
+    if(mouse[0])
     {
-      return;
+      if(square.ownerId != socket.id) //return if the square isnt owned by this user
+      {
+        return;
+      }
+    
+      if(square.color == selectedColor) //return if the state of the square is equal to the input
+      {
+        return;
+      }
+  
+      square.color = selectedColor;
+      RenderSquare(square)
+  
+      console.log("painted square");
+  
+      socket.emit('f.square', square);
     }
 
-    square.on = colorToPaint;
-    RenderSquare(square)
 
-    console.log("painted square");
-
-    socket.emit('f.square', square);
   }
 
   function SquareFromDiv(element)

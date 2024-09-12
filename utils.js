@@ -5,10 +5,11 @@ function DivideSquaresToPeople(squares, users) {
   const width = squares.length;
   const height = squares[0].length;
 
+  users.sort(() => Math.random() - 0.5);
+
   // Assign random positions to each user
   let i = 0;
   users.forEach(user => {
-
     user.x = (packing[users.length][i].x + 0.5) * (width-1);
     user.y = (packing[users.length][i].y + 0.5) * (height-1);
     i = i+1;

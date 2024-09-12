@@ -62,27 +62,56 @@ class GameRoom {
       color: '#000000',
     }
     this.words = require("./data/words.json");
-    console.log(this.words);
+    this.rerollUsed = false;
 
     this.NewRound();
     this.PlayerConnected(creatorSocket, fUser);
+    this.NewRound();
+
+
   }
 
   NewRound()
   {
-    this.ResetAndDivideBoard()
+    GetUsersArray(this.users).forEach(x => {
+      x.reroll = false;
+    })
+    this.AssignRoles();
+    this.ResetBoard();
+    this.DivideBoard();
     this.SetRandomWord();
+    this.rerollUsed = false;
+    EmitToUserObject(this.users, 'b.rerollUsed', this.rerollUsed);
     EmitToUserObject(this.users, 'b.users', this.users)
     EmitToUserObject(this.users, 'b.canvas', this.squares);
     this.EmitWord();
   }
 
+  AssignRoles()
+  {
+    const shuffledUsers = GetUsersArray(this.users).sort(() => 0.5 - Math.random());
+
+    let drawersCount;
+    if(shuffledUsers.length < 3)
+    {
+      drawersCount = 1;
+    }
+    else
+    {
+      let min = 2;
+      let max = shuffledUsers.length - 1;
+      drawersCount = Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    shuffledUsers.forEach((user, index) => {
+      user.drawing = index < drawersCount ? true : false;
+    }); 
+    return shuffledUsers; // return the modified array if needed
+  }
+
   SetRandomWord()
   {
     const randomIndex = Math.floor(Math.random() * Math.min(this.words.length, 1000)); //words sorted from easy to hard - pick from the 1000 easiest
-    console.log(randomIndex + " ?")
-    console.log(this.words + " ?")
-    console.log(this.words[randomIndex] + " ?")
     this.word = this.words[randomIndex].replace('-',' ');
     this.words.splice(randomIndex, 1);
   }
@@ -97,16 +126,22 @@ class GameRoom {
     EmitToUsersArray(unallowedPeople, 'b.word', censoredWord)
   }
 
-  ResetAndDivideBoard()
+
+  ResetBoard()
   {
     this.squares = Array.from({ length: this.gridWidth }, (row, rowIndex) =>
       Array.from({ length: this.gridHeight }, (col, colIndex) => ({
         on: false,
         x: rowIndex,
-        y: colIndex
+        y: colIndex,
+        color: '#ffffff'
       }))
     );
-    this.DivideSquares();
+  }
+
+  ClearBoard()
+  {
+    this.squares.flat().forEach(x => x.color = '#ffffff')
   }
 
   PlayerConnected(socket, fUser)
@@ -118,7 +153,8 @@ class GameRoom {
         drawing: false,
         guessed: false,
         x: 0,
-        y: 0
+        y: 0,
+        reroll: false
     };
     let currentUser = this.users[socket.id]
 
@@ -127,14 +163,35 @@ class GameRoom {
     socket.emit('b.canvas', this.squares);
 
     //send the player list to the player
-    this.OnPlayersChange()
+    this.OnPlayerJoinLeaveOrChangeRole()
     this.EmitWord();
+
+    socket.on('f.reroll', (fUser) => {
+      let user = this.users[socket.id];
+      user.reroll = fUser.reroll;
+
+      let usersArray = GetUsersArray(this.users);
+      if(usersArray.filter(x => x.drawing && x.reroll).length >= Math.ceil(usersArray.filter(x => x.drawing).length * 0.75))
+      {
+        this.rerollUsed = true;
+        this.SetRandomWord();
+        this.ClearBoard();
+        this.EmitWord();
+        EmitToUserObject(this.users, 'b.rerollUsed', this.rerollUsed);
+        EmitToUserObject(this.users, 'b.canvas', this.squares);
+        usersArray.forEach(x => x.reroll = false);
+        this.SendMessageFromSystem("Word re-rolled")
+      }
+
+      EmitToUserObject(this.users, 'b.users', this.users)
+    });
+
   
     socket.on('f.square', (fSquare) => {
       let square = this.squares[fSquare.x][fSquare.y];
       if(square.ownerId == socket.id && this.users[socket.id].drawing)
       {
-        square.on = fSquare.on;
+        square.color = fSquare.color;
         EmitToUserObject(this.users, 'b.square', square);
       }
       else
@@ -174,16 +231,21 @@ class GameRoom {
     socket.on('disconnect', (reason) => {
       if(this.users[socket.id])
       {
-        const message = {
-          author: this.systemUser,
-          content: this.users[socket.id].name + " has left"
-        }
-        EmitToUserObject(this.users, 'b.message', message)
+        this.SendMessageFromSystem(this.users[socket.id].name + " has left")
     
         delete this.users[socket.id];
-        this.OnPlayersChange();
+        this.OnPlayerJoinLeaveOrChangeRole();
       }
     })
+  }
+
+  SendMessageFromSystem(content)
+  {
+    const message = {
+      author: this.systemUser,
+      content: content
+    }
+    EmitToUserObject(this.users, 'b.message', message)
   }
 
   HandleCommand(socketId, message)
@@ -201,25 +263,26 @@ class GameRoom {
     {
       this.users[socketId].guessed = false;
       this.users[socketId].drawing = true;
-      this.OnPlayersChange();
+      this.OnPlayerJoinLeaveOrChangeRole();
     }
     if(commandName == '/guess')
     {
       this.users[socketId].guessed = false;
       this.users[socketId].drawing = false;
-      this.OnPlayersChange();
+      this.OnPlayerJoinLeaveOrChangeRole();
     }
     else if(commandName == '/guessed')
     {
       this.users[socketId].drawing = false;
       this.users[socketId].guessed = true;
-      this.OnPlayersChange();
+      this.OnPlayerJoinLeaveOrChangeRole();
     }
     else if(commandName == '/size')
     {
       this.gridWidth = parameters[0];
       this.gridHeight = parameters[1];
-      this.ResetAndDivideBoard();
+      this.ResetBoard();
+      this.DivideBoard();
       EmitToUserObject(this.users, 'b.canvas', this.squares)
     }
     else if(commandName == '/round')
@@ -228,16 +291,16 @@ class GameRoom {
     }
   }
 
-  OnPlayersChange()
+  OnPlayerJoinLeaveOrChangeRole()
   {
     EmitToUserObject(this.users, 'b.users', this.users)
 
-    this.DivideSquares();
+    this.DivideBoard();
 
     EmitToUserObject(this.users, 'b.canvas-ownership', this.squares)
   }
 
-  DivideSquares()
+  DivideBoard()
   {
     const usersArr = GetUsersArray(this.users).filter(user => user.drawing);
     DivideSquaresToPeople(this.squares, usersArr);

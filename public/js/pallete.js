@@ -14,27 +14,28 @@ function createColorButtons() {
   colors.forEach(color => {
     const button = document.createElement('button');
     button.className = 'color-button';
+    button.hexColor = color;
     button.style.backgroundColor = color;
     button.dataset.selected = 'false'; // Default to not selected
-    button.onclick = () => SelectColor(button);
+    button.onclick = () => SelectColorByButton(button);
 
     //white - special border
     if(color == '#ffffff')
     {
-        button.style.border = '1px solid #7f7f7f';
+      button.style.border = '1px solid #7f7f7f';
     }
 
     //black - select
     if(color == darkGray)
     {
-        button.dataset.selected = 'true'; // Default to not selected
+      button.dataset.selected = 'true'; // Default to not selected
     }
 
     colorPalette.appendChild(button);
   });
 }
 
-function SelectColor(button) {
+function SelectColorByButton(button) {
   // Remove 'data-selected="true"' from all color buttons
   document.querySelectorAll('.color-button').forEach(btn => btn.dataset.selected = 'false');
   
@@ -42,8 +43,22 @@ function SelectColor(button) {
   button.dataset.selected = 'true';
   
   // Update the selected color
-  selectedColor = button.style.backgroundColor;
+  selectedColor = button.hexColor;
   console.log(selectedColor);
+}
+
+function selectColorByHex(inputHex) {
+
+  if(selectedColor != inputHex)
+  {
+    const matchingButton = Array.from(document.querySelectorAll('.color-button')).find(btn => btn.hexColor === inputHex);
+    if (matchingButton) {
+      SelectColorByButton(matchingButton);
+    }
+     else {
+      console.log("Invalid hex color");
+    }
+  }
 }
 
 // Initialize the color buttons when the page loads

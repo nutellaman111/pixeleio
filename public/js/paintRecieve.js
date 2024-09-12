@@ -71,7 +71,7 @@ socket.on('b.canvas-ownership', (bSquares) => {
 
 
 socket.on('b.square', (bSquare) => {
-  squares[bSquare.x][bSquare.y].on = bSquare.on;
+  squares[bSquare.x][bSquare.y].on = bSquare.color;
   RenderSquare(squares[bSquare.x][bSquare.y]);
 });
 
@@ -79,7 +79,7 @@ socket.on('b.square', (bSquare) => {
 
 function RenderSquare(square) {
 
-    square.div.style.backgroundColor = square.on;
+    square.div.style.backgroundColor = square.color;
 
     // Get the owner of the current square
     const ownerId = square.ownerId;
