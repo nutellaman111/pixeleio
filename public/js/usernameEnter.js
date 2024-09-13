@@ -4,12 +4,36 @@
     const gameContainer = document.getElementById('gameContainer')
     const usernameOverlay = document.getElementById('usernameOverlay')
     const gameDisplayType = gameContainer.style.display;
+    console.log(gameDisplayType);
     const grid = document.getElementById('grid')
 
     const colorPicker = document.getElementById('colorPicker');
     const maxAllowedColorLuminance = 60;
     colorPicker.value = hslToHex(getRandomHslColor(maxAllowedColorLuminance))
     username.style.color = colorPicker.value;
+
+    if(false) //debug
+    {
+        const alphabet = 'abcdefghijklmnopqrstuvwxyz';
+        const name = alphabet[Math.floor(Math.random() * alphabet.length)] + alphabet[Math.floor(Math.random() * alphabet.length)];
+
+        username.value = name;
+
+        const colorPicker = document.getElementById('colorPicker');
+        const maxAllowedColorLuminance = 60;
+        colorPicker.value = hslToHex(getRandomHslColor(maxAllowedColorLuminance))
+
+        usernameSubmit();
+    }
+    else
+    {
+        if (localStorage.getItem('username')) {
+            username.value = localStorage.getItem('username')
+        }
+    
+        document.getElementById('usernameOverlay').style.display = 'flex';
+        gameContainer.style.display = 'none';  
+    }
 
     colorPicker.addEventListener('input', (event) => {
         const color = event.target.value;
@@ -34,7 +58,7 @@
         if (username.value && roomInput.value) {
             localStorage.setItem('username', username.value); // Save username to localStorage
             usernameOverlay.style.display = 'none'; // Hide overlay
-            gameContainer.style.display = gameDisplayType;
+            gameContainer.style.display = '';
 
             const newUser = {
                 name: username.value,
@@ -50,31 +74,6 @@
         }
     }
 
-    // Display game content and hide overlay if username already exists
-    window.onload = function() {
-        
-        if(false) //debug
-        {
-            const alphabet = 'abcdefghijklmnopqrstuvwxyz';
-            const name = alphabet[Math.floor(Math.random() * alphabet.length)] + alphabet[Math.floor(Math.random() * alphabet.length)];
 
-            username.value = name;
-
-            const colorPicker = document.getElementById('colorPicker');
-            const maxAllowedColorLuminance = 60;
-            colorPicker.value = hslToHex(getRandomHslColor(maxAllowedColorLuminance))
-
-            usernameSubmit();
-        }
-        else
-        {
-            if (localStorage.getItem('username')) {
-                username.value = localStorage.getItem('username')
-            }
-        
-            document.getElementById('usernameOverlay').style.display = 'flex';
-            gameContainer.style.display = 'none';  
-        }
     
-    };
 }

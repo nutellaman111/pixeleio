@@ -1,17 +1,25 @@
 const packing = require("./data/packing.json");
 
-function DivideSquaresToPeople(squares, users) {
+function DivideSquaresToPeople(squares, users, maintainOrder) {
 
   const width = squares.length;
   const height = squares[0].length;
 
-  users.sort(() => Math.random() - 0.5);
+
+  users.forEach(user => {
+    console.log("before " + user.boardOwnershipOrder);
+    user.boardOwnershipOrder = (user.boardOwnershipOrder && maintainOrder)? user.boardOwnershipOrder : Math.random();
+    console.log("after " + user.boardOwnershipOrder);
+  });
+  users.sort((a,b) => a.boardOwnershipOrder-b.boardOwnershipOrder);
 
   // Assign random positions to each user
   let i = 0;
   users.forEach(user => {
-    user.x = (packing[users.length][i].x + 0.5) * (width-1);
-    user.y = (packing[users.length][i].y + 0.5) * (height-1);
+    user.x = (packing[users.length][i].x + 0.5) * (width);
+    user.y = (packing[users.length][i].y + 0.5) * (height);
+    console.log(user.x);
+    console.log(user.y);
     i = i+1;
   });
 
@@ -30,7 +38,7 @@ function DivideSquaresToPeople(squares, users) {
       
       // Find the minimum distance
       users.forEach(user => {
-        const distance = getDistance(square.x, square.y, user.x, user.y);
+        const distance = getDistance(square.x + 0.5, square.y + 0.5, user.x, user.y); //from the center of the square
         if (distance < minDistance - DISTANCE_THRESHOLD) {
           minDistance = distance;
           nearestUsers = [user]; // Start a new list with the current userId

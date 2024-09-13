@@ -84,7 +84,7 @@ class GameRoom {
     })
     this.AssignRoles();
     this.CreateBoard();
-    this.DivideBoard();
+    this.DivideBoard(false);
     this.SetRandomWord();
     this.rerollUsed = false;
 
@@ -152,7 +152,7 @@ class GameRoom {
         on: false,
         x: rowIndex,
         y: colIndex,
-        color: '#ffffff'
+        color: '#ffffff',
       }))
     );
   }
@@ -162,10 +162,10 @@ class GameRoom {
     this.squares.flat().forEach(x => x.color = '#ffffff')
   }
 
-  DivideBoard()
+  DivideBoard(maintainOrder)
   {
     const usersArr = GetUsersArray(this.users).filter(user => user.drawing);
-    DivideSquaresToPeople(this.squares, usersArr);
+    DivideSquaresToPeople(this.squares, usersArr, maintainOrder);
   }
 
   HandleSquare(socket, fSquare)
@@ -212,7 +212,7 @@ class GameRoom {
   {
     EmitToUserObject(this.users, 'b.users', this.users)
 
-    this.DivideBoard();
+    this.DivideBoard(true);
 
     EmitToUserObject(this.users, 'b.canvas-ownership', this.squares)
   }
@@ -235,7 +235,8 @@ class GameRoom {
         timesDrawing: 0,
         x: 0,
         y: 0,
-        reroll: false
+        reroll: false,
+        score: 0
     };
 
     //send the full canvas to the new player
@@ -295,11 +296,9 @@ class GameRoom {
       {
         if(AreWordsEquivelent(fMessage.content, this.word))
         {
-          this.SendMessageFromSystem(fMessage.content + " is CORRECT!", [currentUser]);
-          currentUser.guessed = true;
-          this.EmitUsers();
+          this.UserGuessedRight(currentUser);
         }
-        else if(AreWordsClose(fMessage.console, this.word)){
+        else if(AreWordsClose(fMessage.content, this.word)){
           this.SendMessageFromSystem(fMessage.content + " is CLOSE!", [currentUser]);
         }
         else
@@ -310,6 +309,42 @@ class GameRoom {
     }
   }
 
+  UserGuessedRight(guesser)
+  {
+    let usersArray = GetUsersArray(this.users);
+
+    guesser.guessed = true;
+    let timePassed = new Date() - this.RoundStartTime;
+    let timeLeft = this.roundDuration - timePassed;
+    let scoreForGuesser = 100*(timeLeft/this.roundDuration);
+    let scoreForDrawers = scoreForGuesser / usersArray.filter(x=>!x.drawing).length
+
+    scoreForGuesser = Math.ceil(scoreForGuesser);
+    scoreForDrawers = Math.ceil(scoreForDrawers);
+
+    guesser.score += scoreForGuesser;
+
+    usersArray.forEach(user => {
+      if(user.drawing)
+      {
+        user.score += scoreForDrawers;
+      }
+    });
+
+    this.SendMessageFromSystem(this.word + " is CORRECT! (+" + scoreForGuesser + ")", [guesser]);
+
+    this.EmitUsers();
+
+
+    console.log("filtered users = " + usersArray.filter(x=>!x.drawing && !x.guessed));
+    if(!usersArray.filter(x=>!x.drawing && !x.guessed).length) //if no onbe is still guessing
+    {
+      console.log("MEOW");
+      this.NewRound();
+    }
+
+  }
+
   SendMessageFromSystem(content, usersArr)
   {
     const message = {
@@ -317,7 +352,7 @@ class GameRoom {
     }
     if(usersArr)
     {
-      EmitToUsersArray(usersArr, 'n.message', message)
+      EmitToUsersArray(usersArr, 'b.message', message)
     }
     else
     {
@@ -363,7 +398,7 @@ class GameRoom {
       this.gridWidth = parameters[0];
       this.gridHeight = parameters[1] || this.gridWidth;
       this.CreateBoard();
-      this.DivideBoard();
+      this.DivideBoard(true);
       EmitToUserObject(this.users, 'b.canvas', this.squares)
     }
     else if(commandName == '/round')

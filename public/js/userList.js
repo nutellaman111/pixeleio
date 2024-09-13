@@ -38,13 +38,13 @@ function RenderUserList()
   
         // Create player score
         const playerScore = document.createElement('span');
-        playerScore.textContent = `Score: ${10}`;
+        playerScore.textContent = `(${player.score})`;
         playerScore.classList.add('player-score');
   
         // Append elements to playerDiv
         playerDiv.appendChild(playerIcon);
         playerDiv.appendChild(playerName);
-        //playerDiv.appendChild(playerScore);
+        playerDiv.appendChild(playerScore);
   
         // Append playerDiv to the player list
         playersDiv.appendChild(playerDiv);
