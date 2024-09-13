@@ -64,7 +64,7 @@ function StateIconOfPlayer(player) {
   }
   else
   {
-    playerIcon.classList.add('fa-solid', 'fa-comment');
+    playerIcon.classList.add('fa-solid', 'fa-circle-question');
   }
 
   return playerIcon;
