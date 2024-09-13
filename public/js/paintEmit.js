@@ -58,6 +58,8 @@
       }
   
       square.color = selectedColor;
+      ApplyShine(grid);
+      grid.setAttribute('data-complete', true);
       RenderSquare(square)
   
       console.log("painted square");
