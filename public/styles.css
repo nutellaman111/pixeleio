@@ -226,6 +226,13 @@ button { /*send button*/
     margin-right: 10px;
 }
 
+.message-icon {
+    width: 20px; /* Adjust size as needed */
+    height: 20px; /* Adjust size as needed */
+    margin-right: 8px; /* Adjust space between icon and text */
+    vertical-align: middle; /* Ensures the icon aligns with text */
+}
+
 .player-name {
     font-weight: bold;
     margin-right: 10px;

@@ -235,7 +235,6 @@ class GameRoom {
         {
           sendTo = GetUsersArray(this.users).filter(x => x.guessed || x.id == socket.id)
           EmitToUsersArray(sendTo, 'b.message', message)
-
         }
         else
         {
@@ -253,11 +252,12 @@ class GameRoom {
               currentUser.guessed = true;
               this.EmitUsers();
             }
-            else if(AreWordsClose){
+            else if(AreWordsClose(message.console, this.word)){
               this.SendMessageFromSystem(message.content + " is CLOSE!", [currentUser]);
             }
             else
             {
+              console.log("sending to everyone");
               EmitToUserObject(this.users, 'b.message', message)
             }
           }
@@ -277,12 +277,12 @@ class GameRoom {
     })
   }
 
-  SendMessageFromSystem(content, userArr)
+  SendMessageFromSystem(content, usersArr)
   {
     const message = {
       content: content
     }
-    if(userArr)
+    if(usersArr)
     {
       EmitToUsersArray(usersArr, 'n.message', message)
     }

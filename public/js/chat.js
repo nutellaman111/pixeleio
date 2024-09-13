@@ -35,25 +35,54 @@ socket.on('b.message', (message) => {
 
 // Function to display a message
 function displayMessage(message) {
-
     let author = users[message.authorId];
 
     const messageElement = document.createElement('div');
     messageElement.classList.add('message');
-    if(author)
-    {
-        messageElement.innerHTML = `<strong>${author.name}:</strong> ${message.content}`;
-        messageElement.style.color = author.color;
+    
+    if (author) {
+        // Create and style the icon
+        const playerIcon = document.createElement('img');
+        playerIcon.classList.add('message-icon');
+        playerIcon.src = StateIconOfPlayer(author);
+        playerIcon.style.filter = colorToFilter(author.color);
+        // Create the strong element for the author's name
+        const authorName = document.createElement('strong');
+        authorName.textContent = `${author.name}: `;
+        authorName.style.color = author.color;
+        authorName.style.marginRight = "3px";
+
+        // Create the message content element
+        const messageContent = document.createElement('span');
+        messageContent.textContent = message.content;
+        messageContent.style.color = author.color;
+
+        // Create a container for the message and icon
+        const contentContainer = document.createElement('div');
+        contentContainer.style.display = 'flex';
+        contentContainer.style.alignItems = 'center';
+
+        // Append the icon and content to the container
+        contentContainer.appendChild(playerIcon);
+        contentContainer.appendChild(authorName);
+        contentContainer.appendChild(messageContent);
+
+        // Append the container to the message element
+        messageElement.appendChild(contentContainer);
+    } else {
+        const messageContent = document.createElement('strong');
+        messageContent.textContent = message.content;
+        messageContent.style.color = 'black';
+        messageContent.style.textAlign = 'center';
+        messageElement.appendChild(messageContent);
     }
-    else
-    {
-        messageElement.innerHTML = `<strong>${message.content}</strong>`;
-        messageElement.style.color = 'black';
-        messageElement.style.textAlign = 'center';
-    }
+
     messagesContainer.appendChild(messageElement);
     messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll to the latest message
 }
+
+
+
 
 function UpdateMessagestSentTo()
 {
