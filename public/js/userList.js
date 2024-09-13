@@ -27,9 +27,9 @@ function RenderUserList()
         playerDiv.style.backgroundColor = player.color;
   
         // Create player icon/*
-        const playerIcon = document.createElement('img'); 
+
+        const playerIcon = StateIconOfPlayer(player);
         playerIcon.classList.add('player-icon');
-        playerIcon.src = StateIconOfPlayer(player);
   
         // Create player name
         const playerName = document.createElement('span');
@@ -52,17 +52,20 @@ function RenderUserList()
 }
 
 function StateIconOfPlayer(player) {
-  const baseUrl = './images/';
+  const playerIcon = document.createElement('i');
+
   if(player.guessed)
   {
-    return baseUrl + 'guessed.svg'
+    playerIcon.classList.add('fa-solid', 'fa-check');
   }
   else if(player.drawing)
   {
-    return baseUrl + 'drawing.svg'
+    playerIcon.classList.add('fa-solid', 'fa-paintbrush');
   }
   else
   {
-    return baseUrl + 'guessing.svg'
+    playerIcon.classList.add('fa-solid', 'fa-comment');
   }
+
+  return playerIcon;
 }

@@ -39,44 +39,37 @@ function displayMessage(message) {
 
     const messageElement = document.createElement('div');
     messageElement.classList.add('message');
+
     
     if (author) {
-        // Create and style the icon
-        const playerIcon = document.createElement('img');
+        //icon
+        const playerIcon = StateIconOfPlayer(author);
         playerIcon.classList.add('message-icon');
-        playerIcon.src = StateIconOfPlayer(author);
-        playerIcon.style.filter = colorToFilter(author.color);
-        // Create the strong element for the author's name
+    
+        //username
         const authorName = document.createElement('strong');
         authorName.textContent = `${author.name}: `;
-        authorName.style.color = author.color;
-        authorName.style.marginRight = "3px";
-
-        // Create the message content element
+        authorName.classList.add('author-name');
+    
+        //content
         const messageContent = document.createElement('span');
         messageContent.textContent = message.content;
-        messageContent.style.color = author.color;
-
-        // Create a container for the message and icon
-        const contentContainer = document.createElement('div');
-        contentContainer.style.display = 'flex';
-        contentContainer.style.alignItems = 'center';
-
-        // Append the icon and content to the container
-        contentContainer.appendChild(playerIcon);
-        contentContainer.appendChild(authorName);
-        contentContainer.appendChild(messageContent);
-
-        // Append the container to the message element
-        messageElement.appendChild(contentContainer);
+    
+        // append all
+        messageElement.style.color = author.color;
+        messageElement.appendChild(playerIcon);
+        messageElement.appendChild(authorName);
+        messageElement.appendChild(messageContent);
     } else {
+        //content
         const messageContent = document.createElement('strong');
         messageContent.textContent = message.content;
-        messageContent.style.color = 'black';
-        messageContent.style.textAlign = 'center';
+    
+        //append all
+        messageElement.classList.add('message-no-author');
         messageElement.appendChild(messageContent);
     }
-
+    
     messagesContainer.appendChild(messageElement);
     messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll to the latest message
 }
