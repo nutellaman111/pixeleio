@@ -52,8 +52,8 @@ class GameRoom {
   {
     this.roomCode = roomCode;
 
-    this.gridWidth = 12; // Change this to the desired number of rows
-    this.gridHeight = 12; // Chan ge this to the desired number of columns
+    this.gridWidth = 14; // Change this to the desired number of rows
+    this.gridHeight = 14; // Chan ge this to the desired number of columns
     
     this.users = {};
     this.systemUser = {
@@ -63,6 +63,7 @@ class GameRoom {
     }
     this.words = require("./data/words.json");
     this.rerollUsed = false;
+    this.waitingForPlayers = true;
 
     this.NewRound();
     this.PlayerConnected(creatorSocket, fUser);
@@ -150,7 +151,7 @@ class GameRoom {
         id: socket.id,
         name: fUser.name,
         color: fUser.color,
-        drawing: false,
+        drawing: this.waitingForPlayers,
         guessed: false,
         x: 0,
         y: 0,
@@ -280,7 +281,14 @@ class GameRoom {
     else if(commandName == '/size')
     {
       this.gridWidth = parameters[0];
-      this.gridHeight = parameters[1];
+      if(parameters[1])
+      {
+        this.gridHeight = parameters[1];
+      }
+      else
+      {
+        this.gridHeight = this.gridWidth;
+      }
       this.ResetBoard();
       this.DivideBoard();
       EmitToUserObject(this.users, 'b.canvas', this.squares)
