@@ -18,6 +18,11 @@ body {
 
 /*above canvas-------------------*/
 
+#timerDisplay
+{
+    font-size: 24px;
+}
+
 #wordDisplay {
     font-size: 2.5em; /* Adjust title size */
     display: inline-block; /* Prevent full width occupation */

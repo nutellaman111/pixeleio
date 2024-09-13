@@ -40,8 +40,17 @@ function displayMessage(message) {
 
     const messageElement = document.createElement('div');
     messageElement.classList.add('message');
-    messageElement.innerHTML = `<strong>${author.name}:</strong> ${message.content}`;
-    messageElement.style.color = author.color;
+    if(author)
+    {
+        messageElement.innerHTML = `<strong>${author.name}:</strong> ${message.content}`;
+        messageElement.style.color = author.color;
+    }
+    else
+    {
+        messageElement.innerHTML = `<strong>${message.content}</strong>`;
+        messageElement.style.color = 'black';
+        messageElement.style.textAlign = 'center';
+    }
     messagesContainer.appendChild(messageElement);
     messagesContainer.scrollTop = messagesContainer.scrollHeight; // Scroll to the latest message
 }

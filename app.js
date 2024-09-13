@@ -1,4 +1,4 @@
-const {DivideSquaresToPeople, GetUsersArray} = require('./utils.js');
+const {DivideSquaresToPeople, GetUsersArray, AreWordsClose, AreWordsEquivelent} = require('./utils.js');
 {
 
 const express = require('express')
@@ -54,13 +54,17 @@ class GameRoom {
 
     this.gridWidth = 14; // Change this to the desired number of rows
     this.gridHeight = 14; // Chan ge this to the desired number of columns
+
+    if(false)
+    {
+      this.roundDuration = 5 * 1000;
+    }
+    else
+    {
+      this.roundDuration = 140 * 1000;
+    }
     
     this.users = {};
-    this.systemUser = {
-      id: 0,
-      name: '[system]',
-      color: '#000000',
-    }
     this.words = require("./data/words.json");
     this.rerollUsed = false;
     this.waitingForPlayers = true;
@@ -68,29 +72,44 @@ class GameRoom {
     this.NewRound();
     this.PlayerConnected(creatorSocket, fUser);
     this.NewRound();
-
-
   }
 
   NewRound()
   {
+    if(this.word)
+    {
+      this.SendMessageFromSystem('The word was ' + this.word)
+    }
+
     GetUsersArray(this.users).forEach(x => {
       x.reroll = false;
+      x.guessed = false;
     })
     this.AssignRoles();
-    this.ResetBoard();
+    this.CreateBoard();
     this.DivideBoard();
     this.SetRandomWord();
     this.rerollUsed = false;
+
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => this.RoundTimedOut(), this.roundDuration);
+    this.RoundStartTime = new Date();
+    EmitToUserObject(this.users, 'b.time', this.roundDuration);
+
     EmitToUserObject(this.users, 'b.rerollUsed', this.rerollUsed);
-    EmitToUserObject(this.users, 'b.users', this.users)
+    this.EmitUsers()
     EmitToUserObject(this.users, 'b.canvas', this.squares);
     this.EmitWord();
   }
 
+  RoundTimedOut()
+  {
+    this.NewRound();
+  }
+
   AssignRoles()
   {
-    const shuffledUsers = GetUsersArray(this.users).sort(() => 0.5 - Math.random());
+    const shuffledUsers = GetUsersArray(this.users).sort((a, b) => a.timesDrawing - b.timesDrawing );
 
     let drawersCount;
     if(shuffledUsers.length < 3)
@@ -105,8 +124,10 @@ class GameRoom {
     }
 
     shuffledUsers.forEach((user, index) => {
-      user.drawing = index < drawersCount ? true : false;
+      user.drawing = index < drawersCount;
+      user.timesDrawing += user.drawing? 1: 0;
     }); 
+
     return shuffledUsers; // return the modified array if needed
   }
 
@@ -128,7 +149,7 @@ class GameRoom {
   }
 
 
-  ResetBoard()
+  CreateBoard()
   {
     this.squares = Array.from({ length: this.gridWidth }, (row, rowIndex) =>
       Array.from({ length: this.gridHeight }, (col, colIndex) => ({
@@ -153,6 +174,7 @@ class GameRoom {
         color: fUser.color,
         drawing: this.waitingForPlayers,
         guessed: false,
+        timesDrawing: 0,
         x: 0,
         y: 0,
         reroll: false
@@ -164,7 +186,7 @@ class GameRoom {
     socket.emit('b.canvas', this.squares);
 
     //send the player list to the player
-    this.OnPlayerJoinLeaveOrChangeRole()
+    this.OnPlayersChangeIncludingDrawingStatus()
     this.EmitWord();
 
     socket.on('f.reroll', (fUser) => {
@@ -184,7 +206,7 @@ class GameRoom {
         this.SendMessageFromSystem("Word re-rolled")
       }
 
-      EmitToUserObject(this.users, 'b.users', this.users)
+      this.EmitUsers()
     });
 
   
@@ -212,20 +234,35 @@ class GameRoom {
         if(currentUser.drawing)
         {
           sendTo = GetUsersArray(this.users).filter(x => x.guessed || x.id == socket.id)
+          EmitToUsersArray(sendTo, 'b.message', message)
+
         }
         else
         {
           if(currentUser.guessed)
           {
             sendTo = GetUsersArray(this.users).filter(x => x.guessed || x.drawing)
+            EmitToUsersArray(sendTo, 'b.message', message)
           }
-          else
+          else //guessing
           {
-            sendTo = GetUsersArray(this.users);
+            if(AreWordsEquivelent(message.content, this.word))
+            {
+              console.log("words equivelent");
+              this.SendMessageFromSystem(message.content + " is CORRECT!", [currentUser]);
+              currentUser.guessed = true;
+              this.EmitUsers();
+            }
+            else if(AreWordsClose){
+              this.SendMessageFromSystem(message.content + " is CLOSE!", [currentUser]);
+            }
+            else
+            {
+              EmitToUserObject(this.users, 'b.message', message)
+            }
           }
         }
 
-        EmitToUsersArray(sendTo, 'b.message', message)
       }
     })
   
@@ -235,18 +272,24 @@ class GameRoom {
         this.SendMessageFromSystem(this.users[socket.id].name + " has left")
     
         delete this.users[socket.id];
-        this.OnPlayerJoinLeaveOrChangeRole();
+        this.OnPlayersChangeIncludingDrawingStatus();
       }
     })
   }
 
-  SendMessageFromSystem(content)
+  SendMessageFromSystem(content, userArr)
   {
     const message = {
-      author: this.systemUser,
       content: content
     }
-    EmitToUserObject(this.users, 'b.message', message)
+    if(userArr)
+    {
+      EmitToUsersArray(usersArr, 'n.message', message)
+    }
+    else
+    {
+      EmitToUserObject(this.users, 'b.message', message)
+    }
   }
 
   HandleCommand(socketId, message)
@@ -264,19 +307,23 @@ class GameRoom {
     {
       this.users[socketId].guessed = false;
       this.users[socketId].drawing = true;
-      this.OnPlayerJoinLeaveOrChangeRole();
+      this.OnPlayersChangeIncludingDrawingStatus();
     }
     if(commandName == '/guess')
     {
       this.users[socketId].guessed = false;
       this.users[socketId].drawing = false;
-      this.OnPlayerJoinLeaveOrChangeRole();
+      this.OnPlayersChangeIncludingDrawingStatus();
     }
     else if(commandName == '/guessed')
     {
       this.users[socketId].drawing = false;
       this.users[socketId].guessed = true;
-      this.OnPlayerJoinLeaveOrChangeRole();
+      this.OnPlayersChangeIncludingDrawingStatus();
+    }
+    else if(commandName == '/time')
+    {
+      this.roundDuration = parameters[0] * 1000;
     }
     else if(commandName == '/size')
     {
@@ -289,7 +336,7 @@ class GameRoom {
       {
         this.gridHeight = this.gridWidth;
       }
-      this.ResetBoard();
+      this.CreateBoard();
       this.DivideBoard();
       EmitToUserObject(this.users, 'b.canvas', this.squares)
     }
@@ -299,7 +346,11 @@ class GameRoom {
     }
   }
 
-  OnPlayerJoinLeaveOrChangeRole()
+  EmitUsers(){
+    EmitToUserObject(this.users, 'b.users', this.users)
+  }
+
+  OnPlayersChangeIncludingDrawingStatus()
   {
     EmitToUserObject(this.users, 'b.users', this.users)
 
