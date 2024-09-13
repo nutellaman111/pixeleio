@@ -1,5 +1,5 @@
 const {DivideSquaresToPeople, GetUsersArray, AreWordsClose, AreWordsEquivelent} = require('./utils.js');
-{
+
 
 const express = require('express')
 const app = express()
@@ -48,6 +48,9 @@ function EmitToUserObject(usersToEmit, eventName, eventData)
 
 //my stuff!!!!!!!!!! !!!!!!!!!!!!!!!!!!!!!!! 
 class GameRoom {
+
+  //GAME LOOP-----------------------------------------------------------------------------------------------------------------------------------------
+
   constructor(creatorSocket, fUser, roomCode)
   {
     this.roomCode = roomCode;
@@ -55,14 +58,8 @@ class GameRoom {
     this.gridWidth = 14; // Change this to the desired number of rows
     this.gridHeight = 14; // Chan ge this to the desired number of columns
 
-    if(false)
-    {
-      this.roundDuration = 5 * 1000;
-    }
-    else
-    {
-      this.roundDuration = 140 * 1000;
-    }
+
+    this.roundDuration = 140 * 1000;
     
     this.users = {};
     this.words = require("./data/words.json");
@@ -95,7 +92,6 @@ class GameRoom {
     this.timer = setTimeout(() => this.RoundTimedOut(), this.roundDuration);
     this.RoundStartTime = new Date();
     EmitToUserObject(this.users, 'b.time', this.roundDuration);
-
     EmitToUserObject(this.users, 'b.rerollUsed', this.rerollUsed);
     this.EmitUsers()
     EmitToUserObject(this.users, 'b.canvas', this.squares);
@@ -106,6 +102,87 @@ class GameRoom {
   {
     this.NewRound();
   }
+
+  //REROLL--------------------------------------------------------------------------------------------------------------------------------------------
+
+  HandleReroll(socket, fUser)
+  {
+    let user = this.users[socket.id];
+    user.reroll = fUser.reroll;
+
+    let usersArray = GetUsersArray(this.users);
+    if(usersArray.filter(x => x.drawing && x.reroll).length >= Math.ceil(usersArray.filter(x => x.drawing).length * 0.75))
+    {
+      this.rerollUsed = true;
+      this.SetRandomWord();
+      this.ClearBoard();
+      this.EmitWord();
+      EmitToUserObject(this.users, 'b.rerollUsed', this.rerollUsed);
+      EmitToUserObject(this.users, 'b.canvas', this.squares);
+      usersArray.forEach(x => x.reroll = false);
+      this.SendMessageFromSystem("Word re-rolled")
+    }
+
+    this.EmitUsers()
+  };
+
+  //WORD---------------------------------------------------------------------------------------------------------------------------------------------
+  SetRandomWord()
+  {
+    const randomIndex = Math.floor(Math.random() * Math.min(this.words.length, 1000)); //words sorted from easy to hard - pick from the 1000 easiest
+    this.word = this.words[randomIndex].replace('-',' ');
+    this.words.splice(randomIndex, 1);
+  }
+  
+  EmitWord()
+  {
+    let allowedPeople = GetUsersArray(this.users).filter(x=>x.drawing || x.guessed)
+    EmitToUsersArray(allowedPeople, 'b.word', this.word)
+
+    let censoredWord = this.word.replace(' ', '-').replace(/[a-zA-Z]/g, " _ ");
+    let unallowedPeople = GetUsersArray(this.users).filter(x=>!x.drawing && !x.guessed)
+    EmitToUsersArray(unallowedPeople, 'b.word', censoredWord)
+  }
+
+  //BOARD------------------------------------------------------------------------------------------------------------------------------------------
+  CreateBoard()
+  {
+    this.squares = Array.from({ length: this.gridWidth }, (row, rowIndex) =>
+      Array.from({ length: this.gridHeight }, (col, colIndex) => ({
+        on: false,
+        x: rowIndex,
+        y: colIndex,
+        color: '#ffffff'
+      }))
+    );
+  }
+
+  ClearBoard()
+  {
+    this.squares.flat().forEach(x => x.color = '#ffffff')
+  }
+
+  DivideBoard()
+  {
+    const usersArr = GetUsersArray(this.users).filter(user => user.drawing);
+    DivideSquaresToPeople(this.squares, usersArr);
+  }
+
+  HandleSquare(socket, fSquare)
+  {
+    let square = this.squares[fSquare.x][fSquare.y];
+    if(square.ownerId == socket.id && this.users[socket.id].drawing)
+    {
+      square.color = fSquare.color;
+      EmitToUserObject(this.users, 'b.square', square);
+    }
+    else
+    {
+      socket.emit('b.square', square);
+    }
+  };
+
+  //PLAYERS---------------------------------------------------------------------------------------------------------------------------------------------------------
 
   AssignRoles()
   {
@@ -131,41 +208,22 @@ class GameRoom {
     return shuffledUsers; // return the modified array if needed
   }
 
-  SetRandomWord()
+  OnPlayersChangeIncludingDrawingStatus()
   {
-    const randomIndex = Math.floor(Math.random() * Math.min(this.words.length, 1000)); //words sorted from easy to hard - pick from the 1000 easiest
-    this.word = this.words[randomIndex].replace('-',' ');
-    this.words.splice(randomIndex, 1);
-  }
-  
-  EmitWord()
-  {
-    let allowedPeople = GetUsersArray(this.users).filter(x=>x.drawing || x.guessed)
-    EmitToUsersArray(allowedPeople, 'b.word', this.word)
+    EmitToUserObject(this.users, 'b.users', this.users)
 
-    let censoredWord = this.word.replace(' ', '-').replace(/[a-zA-Z]/g, " _ ");
-    let unallowedPeople = GetUsersArray(this.users).filter(x=>!x.drawing && !x.guessed)
-    EmitToUsersArray(unallowedPeople, 'b.word', censoredWord)
+    this.DivideBoard();
+
+    EmitToUserObject(this.users, 'b.canvas-ownership', this.squares)
   }
 
 
-  CreateBoard()
-  {
-    this.squares = Array.from({ length: this.gridWidth }, (row, rowIndex) =>
-      Array.from({ length: this.gridHeight }, (col, colIndex) => ({
-        on: false,
-        x: rowIndex,
-        y: colIndex,
-        color: '#ffffff'
-      }))
-    );
+
+  EmitUsers(){
+    EmitToUserObject(this.users, 'b.users', this.users)
   }
 
-  ClearBoard()
-  {
-    this.squares.flat().forEach(x => x.color = '#ffffff')
-  }
-
+  //INDIVIDUAL PLAYER------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   PlayerConnected(socket, fUser)
   {
     this.users[socket.id] = {
@@ -179,7 +237,6 @@ class GameRoom {
         y: 0,
         reroll: false
     };
-    let currentUser = this.users[socket.id]
 
     //send the full canvas to the new player
     socket.emit('b.users', this.users)
@@ -189,82 +246,9 @@ class GameRoom {
     this.OnPlayersChangeIncludingDrawingStatus()
     this.EmitWord();
 
-    socket.on('f.reroll', (fUser) => {
-      let user = this.users[socket.id];
-      user.reroll = fUser.reroll;
-
-      let usersArray = GetUsersArray(this.users);
-      if(usersArray.filter(x => x.drawing && x.reroll).length >= Math.ceil(usersArray.filter(x => x.drawing).length * 0.75))
-      {
-        this.rerollUsed = true;
-        this.SetRandomWord();
-        this.ClearBoard();
-        this.EmitWord();
-        EmitToUserObject(this.users, 'b.rerollUsed', this.rerollUsed);
-        EmitToUserObject(this.users, 'b.canvas', this.squares);
-        usersArray.forEach(x => x.reroll = false);
-        this.SendMessageFromSystem("Word re-rolled")
-      }
-
-      this.EmitUsers()
-    });
-
-  
-    socket.on('f.square', (fSquare) => {
-      let square = this.squares[fSquare.x][fSquare.y];
-      if(square.ownerId == socket.id && this.users[socket.id].drawing)
-      {
-        square.color = fSquare.color;
-        EmitToUserObject(this.users, 'b.square', square);
-      }
-      else
-      {
-        socket.emit('b.square', square);
-      }
-    });
-    
-    socket.on('f.message', (message) => {
-      if(message.content[0]=='/')
-      {
-        this.HandleCommand(socket.id, message);
-      }
-      else
-      {
-        let sendTo;
-        if(currentUser.drawing)
-        {
-          sendTo = GetUsersArray(this.users).filter(x => x.guessed || x.id == socket.id)
-          EmitToUsersArray(sendTo, 'b.message', message)
-        }
-        else
-        {
-          if(currentUser.guessed)
-          {
-            sendTo = GetUsersArray(this.users).filter(x => x.guessed || x.drawing)
-            EmitToUsersArray(sendTo, 'b.message', message)
-          }
-          else //guessing
-          {
-            if(AreWordsEquivelent(message.content, this.word))
-            {
-              console.log("words equivelent");
-              this.SendMessageFromSystem(message.content + " is CORRECT!", [currentUser]);
-              currentUser.guessed = true;
-              this.EmitUsers();
-            }
-            else if(AreWordsClose(message.console, this.word)){
-              this.SendMessageFromSystem(message.content + " is CLOSE!", [currentUser]);
-            }
-            else
-            {
-              console.log("sending to everyone");
-              EmitToUserObject(this.users, 'b.message', message)
-            }
-          }
-        }
-
-      }
-    })
+    socket.on('f.reroll', (fUser) => this.HandleReroll(socket, fUser));
+    socket.on('f.square', (fSquare) => this.HandleSquare(socket, fSquare));
+    socket.on('f.message', (fMessage) => this.HandleMessage(socket, fMessage));
   
     socket.on('disconnect', (reason) => {
       if(this.users[socket.id])
@@ -275,6 +259,55 @@ class GameRoom {
         this.OnPlayersChangeIncludingDrawingStatus();
       }
     })
+  }
+
+
+  //CHAT------------------------------------------
+
+  HandleMessage(socket, fMessage)
+  {
+    let currentUser = this.users[socket.id]; 
+
+    if(fMessage.content[0]=='/')
+    {
+      this.HandleCommand(socket.id, fMessage);
+    }
+    else
+    {
+      let sendTo;
+
+      //drawing - send to people who guessed
+      if(currentUser.drawing)
+      {
+        sendTo = GetUsersArray(this.users).filter(x => x.guessed || x.id == socket.id)
+        EmitToUsersArray(sendTo, 'b.message', fMessage)
+      }
+
+      //guessed - send to people who guessed or are drawing
+      else if(currentUser.guessed)
+      {
+        sendTo = GetUsersArray(this.users).filter(x => x.guessed || x.drawing)
+        EmitToUsersArray(sendTo, 'b.message', fMessage)
+      }
+
+      //guessing - send to everyone unless its correct or close
+      else 
+      {
+        if(AreWordsEquivelent(fMessage.content, this.word))
+        {
+          this.SendMessageFromSystem(fMessage.content + " is CORRECT!", [currentUser]);
+          currentUser.guessed = true;
+          this.EmitUsers();
+        }
+        else if(AreWordsClose(fMessage.console, this.word)){
+          this.SendMessageFromSystem(fMessage.content + " is CLOSE!", [currentUser]);
+        }
+        else
+        {
+          EmitToUserObject(this.users, 'b.message', fMessage)
+        }
+      }
+    }
   }
 
   SendMessageFromSystem(content, usersArr)
@@ -328,14 +361,7 @@ class GameRoom {
     else if(commandName == '/size')
     {
       this.gridWidth = parameters[0];
-      if(parameters[1])
-      {
-        this.gridHeight = parameters[1];
-      }
-      else
-      {
-        this.gridHeight = this.gridWidth;
-      }
+      this.gridHeight = parameters[1] || this.gridWidth;
       this.CreateBoard();
       this.DivideBoard();
       EmitToUserObject(this.users, 'b.canvas', this.squares)
@@ -345,29 +371,11 @@ class GameRoom {
       this.NewRound();
     }
   }
-
-  EmitUsers(){
-    EmitToUserObject(this.users, 'b.users', this.users)
-  }
-
-  OnPlayersChangeIncludingDrawingStatus()
-  {
-    EmitToUserObject(this.users, 'b.users', this.users)
-
-    this.DivideBoard();
-
-    EmitToUserObject(this.users, 'b.canvas-ownership', this.squares)
-  }
-
-  DivideBoard()
-  {
-    const usersArr = GetUsersArray(this.users).filter(user => user.drawing);
-    DivideSquaresToPeople(this.squares, usersArr);
-  }
 }
+
+
 
 server.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
 })
 
-}
