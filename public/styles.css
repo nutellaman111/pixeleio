@@ -64,10 +64,11 @@ body {
     position: relative; /* Ensure pseudo-element is positioned relative to this container */
     overflow: hidden;
     transition: box-shadow 0.3s ease-in-out;
+    box-shadow: none; /* Reset by default */
 }
-.grid[data-complete] {
+.grid[data-complete="true"] {
     box-shadow: 0 0 30px rgb(201, 223, 255); /* Enhanced glow on hover */
-} 
+}
 
 .square {
     background-color: white;

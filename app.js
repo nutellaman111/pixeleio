@@ -40,11 +40,6 @@ function EmitToUsersArray(usersToEmit, eventName, eventData)
   });
 }
 
-function EmitToUserObject(usersToEmit, eventName, eventData)
-{
-  EmitToUsersArray(GetUsersArray(usersToEmit), eventName, eventData);
-}
-
 
 //my stuff!!!!!!!!!! !!!!!!!!!!!!!!!!!!!!!!! 
 class GameRoom {
@@ -58,17 +53,21 @@ class GameRoom {
     this.gridWidth = 14; // Change this to the desired number of rows
     this.gridHeight = 14; // Chan ge this to the desired number of columns
 
-
+    //140, 5
     this.roundDuration = 140 * 1000;
+    this.roundEndingDuration = 10 * 1000;
     
     this.users = {};
     this.words = require("./data/words.json");
     this.rerollUsed = false;
-    this.waitingForPlayers = true;
+    this.gameState = "waitingForPlayers";
 
     this.NewRound();
     this.PlayerConnected(creatorSocket, fUser);
     this.NewRound();
+
+    this.currentWaitStart;
+    this.currentWaitDuration;
   }
 
   NewRound()
@@ -87,21 +86,52 @@ class GameRoom {
     this.DivideBoard(false);
     this.SetRandomWord();
     this.rerollUsed = false;
+    this.gameState = "inProgress";
 
-    clearTimeout(this.timer);
-    this.timer = setTimeout(() => this.RoundTimedOut(), this.roundDuration);
+    this.EmitToUserObject('b.gameState', this.gameState)
+    this.SetTimer(() => this.RoundTimedOut(), this.roundDuration)
     this.RoundStartTime = new Date();
-    EmitToUserObject(this.users, 'b.time', this.roundDuration);
-    EmitToUserObject(this.users, 'b.rerollUsed', this.rerollUsed);
+    this.EmitToUserObject('b.rerollUsed', this.rerollUsed);
     this.EmitUsers()
-    EmitToUserObject(this.users, 'b.canvas', this.squares);
+    this.EmitToUserObject('b.canvas', this.squares);
     this.EmitWord();
   }
 
   RoundTimedOut()
   {
-    this.NewRound();
+    this.RoundEnd();
   }
+
+  RoundEnd()
+  {
+    this.gameState = "roundEnding"
+    this.EmitToUserObject('b.gameState',this.gameState)
+    this.SetTimer(() => this.NewRound(), this.roundEndingDuration)
+  }
+
+  //EMISSION------------------------------------------------------------------------------------------------------------------------
+  EmitToUserObject(eventName, eventData)
+  {
+    EmitToUsersArray(GetUsersArray(this.users), eventName, eventData);
+  }
+
+  //TIME------------------------------------------------------------------------------------------------------------------------------------
+
+  GetTimeRemainingMS()
+  {
+    return this.currentWaitDuration - (new Date() - this.currentWaitStart)
+  }
+
+  SetTimer(onFinish, timeToWaitMS)
+  {
+    clearTimeout(this.timer);
+    this.currentWaitStart = new Date();
+    this.currentWaitDuration = timeToWaitMS;
+    this.timer = setTimeout(onFinish, timeToWaitMS);
+    this.EmitToUserObject('b.time', this.GetTimeRemainingMS());
+  }
+
+
 
   //REROLL--------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -117,8 +147,8 @@ class GameRoom {
       this.SetRandomWord();
       this.ClearBoard();
       this.EmitWord();
-      EmitToUserObject(this.users, 'b.rerollUsed', this.rerollUsed);
-      EmitToUserObject(this.users, 'b.canvas', this.squares);
+      this.EmitToUserObject('b.rerollUsed', this.rerollUsed);
+      this.EmitToUserObject('b.canvas', this.squares);
       usersArray.forEach(x => x.reroll = false);
       this.SendMessageFromSystem("Word re-rolled")
     }
@@ -168,13 +198,13 @@ class GameRoom {
     DivideSquaresToPeople(this.squares, usersArr, maintainOrder);
   }
 
-  HandleSquare(socket, fSquare)
+  HandleSquare(socket, fSquare) //player trying to draw
   {
     let square = this.squares[fSquare.x][fSquare.y];
-    if(square.ownerId == socket.id && this.users[socket.id].drawing)
+    if((this.gameState == "inProgress" || this.gameState == "waitingForPlayers") && square.ownerId == socket.id && this.users[socket.id].drawing)
     {
       square.color = fSquare.color;
-      EmitToUserObject(this.users, 'b.square', square);
+      this.EmitToUserObject('b.square', square);
     }
     else
     {
@@ -210,17 +240,17 @@ class GameRoom {
 
   OnPlayersChangeIncludingDrawingStatus()
   {
-    EmitToUserObject(this.users, 'b.users', this.users)
+    this.EmitToUserObject('b.users', this.users)
 
     this.DivideBoard(true);
 
-    EmitToUserObject(this.users, 'b.canvas-ownership', this.squares)
+    this.EmitToUserObject('b.canvas-ownership', this.squares)
   }
 
 
 
   EmitUsers(){
-    EmitToUserObject(this.users, 'b.users', this.users)
+    this.EmitToUserObject('b.users', this.users)
   }
 
   //INDIVIDUAL PLAYER------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -230,7 +260,7 @@ class GameRoom {
         id: socket.id,
         name: fUser.name,
         color: fUser.color,
-        drawing: this.waitingForPlayers,
+        drawing: this.gameState == "waitingForPlayers",
         guessed: false,
         timesDrawing: 0,
         x: 0,
@@ -239,9 +269,10 @@ class GameRoom {
         score: 0
     };
 
-    //send the full canvas to the new player
+    socket.emit('b.gameState', this.gameState)
     socket.emit('b.users', this.users)
     socket.emit('b.canvas', this.squares);
+    socket.emit('b.time', this.GetTimeRemainingMS());
 
     //send the player list to the player
     this.OnPlayersChangeIncludingDrawingStatus()
@@ -303,7 +334,7 @@ class GameRoom {
         }
         else
         {
-          EmitToUserObject(this.users, 'b.message', fMessage)
+          this.EmitToUserObject('b.message', fMessage)
         }
       }
     }
@@ -314,8 +345,7 @@ class GameRoom {
     let usersArray = GetUsersArray(this.users);
 
     guesser.guessed = true;
-    let timePassed = new Date() - this.RoundStartTime;
-    let timeLeft = this.roundDuration - timePassed;
+    let timeLeft = this.GetTimeRemainingMS();
     let scoreForGuesser = 100*(timeLeft/this.roundDuration);
     let scoreForDrawers = scoreForGuesser / usersArray.filter(x=>!x.drawing).length
 
@@ -356,7 +386,7 @@ class GameRoom {
     }
     else
     {
-      EmitToUserObject(this.users, 'b.message', message)
+      this.EmitToUserObject('b.message', message)
     }
   }
 
@@ -399,7 +429,7 @@ class GameRoom {
       this.gridHeight = parameters[1] || this.gridWidth;
       this.CreateBoard();
       this.DivideBoard(true);
-      EmitToUserObject(this.users, 'b.canvas', this.squares)
+      this.EmitToUserObject('b.canvas', this.squares)
     }
     else if(commandName == '/round')
     {

@@ -16,8 +16,8 @@ function DivideSquaresToPeople(squares, users, maintainOrder) {
   // Assign random positions to each user
   let i = 0;
   users.forEach(user => {
-    user.x = (packing[users.length][i].x + 0.5) * (width);
-    user.y = (packing[users.length][i].y + 0.5) * (height);
+    user.x = (packing[users.length][i].x) * (width);
+    user.y = (packing[users.length][i].y) * (height);
     console.log(user.x);
     console.log(user.y);
     i = i+1;

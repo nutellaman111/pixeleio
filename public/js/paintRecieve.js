@@ -27,14 +27,7 @@ socket.on('b.canvas', (bSquares) => {
     }
   }
 
-  for(let y = 0; y < height; y++)
-  {
-    for(let x = 0; x < width; x++)
-    {
-      RenderSquare(squares[x][y])
-    }
-  }
-
+  RenderBoard();
   
 })
 socket.on('b.canvas-ownership', (bSquares) => {
@@ -56,15 +49,36 @@ socket.on('b.canvas-ownership', (bSquares) => {
         }
       }
       
-      for(let y = 0; y < height; y++)
-      {
-        for(let x = 0; x < width; x++)
-        {
-          RenderSquare(squares[x][y])
-        }
-      }
+      RenderBoard();
     }
 })
+
+function RenderBoard()
+{
+  if(gameState == "roundEnding")
+  {
+    ApplyShine(grid);
+    grid.setAttribute('data-complete', true);
+  }
+  else
+  {
+    console.log("glow disable");
+    grid.setAttribute('data-complete', false);
+  }
+
+
+
+  let width = squares.length;
+  let height = squares[0].length;
+  
+  for(let y = 0; y < height; y++)
+  {
+    for(let x = 0; x < width; x++)
+    {
+      RenderSquare(squares[x][y])
+    }
+  }
+}
 
 
 socket.on('b.square', (bSquare) => {
@@ -92,38 +106,40 @@ function RenderSquare(square) {
   let borderBottom = '0';
   let borderLeft = '0';
 
-  let color = users[ownerId] ? users[ownerId].color : '#ff00ff';
+  if(gameState == "inProgress")
+  {
+    let color = users[ownerId] ? users[ownerId].color : '#ff00ff';
   
-  const small = `2px solid ${color}`
-  const big = `5px solid ${color}`
-  
-  if (y - 1 < 0) {
-    borderTop = big; // Set border width and color
-  } else if (squares[x][y - 1].ownerId !== ownerId) {
-    borderTop = small;
-  }
-  
-  // Check the neighbor to the right
-  if (x + 1 >= width) {
-    borderRight = big;
-  } else if (squares[x + 1][y].ownerId !== ownerId) {
-    borderRight = small;
-  }
-  
-  // Check the neighbor to the bottom
-  if (y + 1 >= height) {
-    borderBottom = big;
-  } else if (squares[x][y + 1].ownerId !== ownerId) {
-    borderBottom = small;
-  }
-  
-  // Check the neighbor to the left
-  if (x - 1 < 0) {
-    borderLeft = big;
-  } else if (squares[x - 1][y].ownerId !== ownerId) {
-    borderLeft = small;
-  }
-  
+    const small = `2px solid ${color}`
+    const big = `5px solid ${color}`
+    
+    if (y - 1 < 0) {
+      borderTop = big; // Set border width and color
+    } else if (squares[x][y - 1].ownerId !== ownerId) {
+      borderTop = small;
+    }
+    
+    // Check the neighbor to the right
+    if (x + 1 >= width) {
+      borderRight = big;
+    } else if (squares[x + 1][y].ownerId !== ownerId) {
+      borderRight = small;
+    }
+    
+    // Check the neighbor to the bottom
+    if (y + 1 >= height) {
+      borderBottom = big;
+    } else if (squares[x][y + 1].ownerId !== ownerId) {
+      borderBottom = small;
+    }
+    
+    // Check the neighbor to the left
+    if (x - 1 < 0) {
+      borderLeft = big;
+    } else if (squares[x - 1][y].ownerId !== ownerId) {
+      borderLeft = small;
+    }
+  }  
 
   // Apply borders to the square
   const element = square.div;
