@@ -60,11 +60,13 @@ body {
 .grid {
     display: grid;
     aspect-ratio: 1/1;
+    height: 400px;
     padding: 10px;
     position: relative; /* Ensure pseudo-element is positioned relative to this container */
     overflow: hidden;
     transition: box-shadow 0.3s ease-in-out;
     box-shadow: none; /* Reset by default */
+    box-sizing: border-box;
 }
 .grid[data-complete="true"] {
     box-shadow: 0 0 30px rgb(201, 223, 255); /* Enhanced glow on hover */
@@ -90,11 +92,98 @@ body {
     z-index: 5;
 }
 
+/*toooooooooooooooooooooooooooools*/
+
+.selectable-tool-container {
+    display: flex;
+    justify-content: center;
+  }
+  
+  .selectable-tool-input {
+    display: none; /* Hide the default checkbox */
+  }
+  
+  .selectable-tool-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    background-color: #ccc; /* Default background color */
+    box-sizing: border-box;
+    justify-content: center;
+    z-index: 100;
+    padding: 0px 10px;
+
+    border-radius: 10%;
+
+    font-size: 24px; /* Adjust icon size */
+
+
+  }
+
+  
+  .selectable-tool-input:checked + .selectable-tool-label {
+    background-color: #00a2e8; /* Background color when checked */
+  }
+
+  
+
+.hold-button {
+
+    display: flex;
+    width: auto;
+    padding: 0px 10px;
+    justify-content: center;
+
+    background-color: #fff;
+    border: none;
+    color: #b92222;
+    font-size: 24px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    outline: none;
+    align-items: center;
+    background-color: #ccc; /* Default background color */
+
+    border-radius: 10%;
+}
+
+.hold-button::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 0;
+    background-color: #b92222;
+    z-index: 1;
+    transition: none; /* Default to no transition for instant reset */
+}
+
+.hold-button:active::before {
+    height: 100%;
+    transition: height 1s cubic-bezier(0,1.06,1,.69); /* Fast start, slow end */
+}
+
+.hold-button span {
+    position: relative;
+    z-index: 2;
+}
+
+
+.colorsAndTools {
+    margin-top: 15px;
+    display: flex;
+    padding: 10px 10px;
+    justify-content: center;
+    background-color: white;
+    border-radius: 5px;
+}
+
 .color-palette {
     display: flex;
     width: 420px;
     flex-wrap: wrap;
-    padding: 10px 0;
     justify-content: center;
   }
   
@@ -151,7 +240,7 @@ body {
     height: 100vh;
     padding-bottom: 200px;
     box-sizing: border-box;
-    background-color: rgb(179, 111, 137);
+    background-color: rgb(137, 171, 214);
     flex-direction: column; /* Arrange items top to bottom */
     align-items: center; /* Center the content horizontally */
 }
@@ -167,7 +256,7 @@ body {
 .chat {
     margin-left: 20px;
     width: 300px; /* Adjust as needed */
-    height: 500px; /* Adjust as needed */
+    height: 400px;
     padding: 10px;
     box-sizing: border-box;
     background-color: #fff;
@@ -183,7 +272,7 @@ body {
     margin-bottom: 10px;
     padding: 5px;
     max-height: 400px;
-    background-color: #eec5eb;
+    background-color: #b8c7e4;
 }
 
 
@@ -256,7 +345,7 @@ button { /*send button*/
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
     overflow-y: auto;
     width: 300px; /* Adjust as needed */
-    max-height: 500px; /* Adjust as needed */
+    max-height: 400px; /* Adjust as needed */
     border-radius: 5px;
 
 }

@@ -12,7 +12,7 @@
     colorPicker.value = hslToHex(getRandomHslColor(maxAllowedColorLuminance))
     username.style.color = colorPicker.value;
 
-    if(false) //debug
+    if(true) //debug
     {
         const alphabet = 'abcdefghijklmnopqrstuvwxyz';
         const name = alphabet[Math.floor(Math.random() * alphabet.length)] + alphabet[Math.floor(Math.random() * alphabet.length)];

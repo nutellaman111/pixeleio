@@ -1,4 +1,48 @@
+
+let bucketSelected = false;
+
 {
+
+//clear tool---------------------------------------------------------
+// Select the button
+const clearButton = document.getElementById('clear');
+
+// Timer and delay variables
+let holdTimer;
+const holdDuration = 1000; // 1 second
+
+// Function to handle the button hold 
+function onHold() {
+  console.log("clear!");
+  ClearAll()
+  // Perform your desired action here
+}
+
+// Function to start the timer
+function startHoldTimer() {
+  holdTimer = setTimeout(onHold, holdDuration);
+}
+
+// Function to clear the timer
+function clearHoldTimer() {
+  clearTimeout(holdTimer);
+}
+
+// Event listeners for the button
+clearButton.addEventListener('mousedown', startHoldTimer);
+clearButton.addEventListener('mouseup', clearHoldTimer);
+clearButton.addEventListener('mouseout', clearHoldTimer);
+
+
+//bucket tool---------------------------------------------------
+const bucketCheckbox = document.getElementById('bucket');
+
+bucketCheckbox.addEventListener('change', (event) => {
+    bucketSelected = event.target.checked;
+    RenderBoard();
+});
+
+//mouse----------------------------------------------------------------
   const mouse = {
     0: false,
     2: false
@@ -30,6 +74,8 @@
       handleMouseAction(e);
   });
 
+//square pressed----------------------------------------------------------------------------
+
   function handleMouseAction(e) {
 
     let square = SquareFromDiv(e.target) //return if not on a square
@@ -57,13 +103,20 @@
         return;
       }
   
-      square.color = selectedColor;
+      if(bucketSelected)
+      {
+        socket.emit('f.squares', bucketFill(square.x, square.y, selectedColor));
+      }
+      else
+      {
+        square.color = selectedColor;
+        RenderSquare(square)
+        socket.emit('f.squares', [square]);
+      }
 
-      RenderSquare(square)
   
       console.log("painted square");
   
-      socket.emit('f.square', square);
     }
 
 
@@ -73,4 +126,48 @@
   {
     return squares.flat().find(square => square.div === element);
   }
+
+
+  function bucketFill(startX, startY, newColor) {
+    const changedSquares = []; // Array to store changed squares
+  
+    const startSquare = squares[startX][startY];
+    const oldColor = startSquare.color;
+  
+    if (oldColor === newColor) return changedSquares; // No need to fill if colors are the same
+  
+    const stack = [{ x: startX, y: startY }];
+  
+    while (stack.length > 0) {
+      const { x, y } = stack.pop();
+  
+      if (x < 0 || x >= squares.length || y < 0 || y >= squares[0].length) continue;
+      const currentSquare = squares[x][y];
+  
+      if (currentSquare.color !== oldColor || currentSquare.ownerId !== socket.id) continue;
+  
+      currentSquare.color = newColor;
+      changedSquares.push(currentSquare);
+  
+      // Push adjacent squares onto the stack
+      stack.push({ x: x + 1, y });
+      stack.push({ x: x - 1, y });
+      stack.push({ x, y: y + 1 });
+      stack.push({ x, y: y - 1 });
+    }
+  
+    return changedSquares;
+  }
+
+  function ClearAll()
+  {
+    let ownedSquares = squares.flat().filter(x => x.ownerId == socket.id && x.color != "#ffffff");
+    ownedSquares.forEach(square => {
+      console.log("hey");
+      square.color = "#ffffff";
+      RenderSquare(square)
+    });
+    socket.emit('f.squares', ownedSquares);
+  }
+  
 }

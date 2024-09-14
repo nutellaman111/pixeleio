@@ -23,7 +23,6 @@ socket.on('b.canvas', (bSquares) => {
 
       grid.appendChild(squareDiv);
       squares[x][y].div = squareDiv;
-      RenderSquare(squares[x][y])
     }
   }
 
@@ -53,6 +52,15 @@ socket.on('b.canvas-ownership', (bSquares) => {
     }
 })
 
+
+
+socket.on('b.squares', (bSquares) => {
+  bSquares.forEach(bSquare => {
+    squares[bSquare.x][bSquare.y].color = bSquare.color;
+    RenderSquare(squares[bSquare.x][bSquare.y]);
+  });
+});
+
 function RenderBoard()
 {
   if(gameState == "roundEnding")
@@ -66,8 +74,6 @@ function RenderBoard()
     grid.setAttribute('data-complete', false);
   }
 
-
-
   let width = squares.length;
   let height = squares[0].length;
   
@@ -79,14 +85,6 @@ function RenderBoard()
     }
   }
 }
-
-
-socket.on('b.square', (bSquare) => {
-  squares[bSquare.x][bSquare.y].color = bSquare.color;
-  RenderSquare(squares[bSquare.x][bSquare.y]);
-});
-
-
 
 function RenderSquare(square) {
 
@@ -108,10 +106,12 @@ function RenderSquare(square) {
 
   if(gameState == "inProgress")
   {
+    let ownedByThisUser = ownerId == socket.id;
     let color = users[ownerId] ? users[ownerId].color : '#ff00ff';
   
-    const small = `2px solid ${color}`
-    const big = `5px solid ${color}`
+    const borderStyle = ownedByThisUser ? 'double' : 'solid';
+    const small = `${ownedByThisUser ? '4px' : '2px'} ${borderStyle} ${color}`;
+    const big = `${ownedByThisUser ? '6px' : '4px'} ${borderStyle} ${color}`;
     
     if (y - 1 < 0) {
       borderTop = big; // Set border width and color
@@ -148,5 +148,5 @@ function RenderSquare(square) {
   element.style.borderBottom = borderBottom;
   element.style.borderLeft = borderLeft;
 
-  element.style.cursor = square.ownerId == socket.id ? 'crosshair' : 'no-drop';
+  element.style.cursor = square.ownerId == socket.id ? (bucketSelected? 'pointer' : 'crosshair' ) : 'no-drop';
 }

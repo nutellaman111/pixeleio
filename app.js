@@ -53,7 +53,7 @@ class GameRoom {
     this.gridWidth = 14; // Change this to the desired number of rows
     this.gridHeight = 14; // Chan ge this to the desired number of columns
 
-    //140, 5
+    //140, 5 
     this.roundDuration = 140 * 1000;
     this.roundEndingDuration = 10 * 1000;
     
@@ -198,25 +198,38 @@ class GameRoom {
     DivideSquaresToPeople(this.squares, usersArr, maintainOrder);
   }
 
-  HandleSquare(socket, fSquare) //player trying to draw
-  {
-    let square = this.squares[fSquare.x][fSquare.y];
-    if((this.gameState == "inProgress" || this.gameState == "waitingForPlayers") && square.ownerId == socket.id && this.users[socket.id].drawing)
-    {
-      square.color = fSquare.color;
-      this.EmitToUserObject('b.square', square);
+  HandlePaintingSquares(socket, fSquares) {
+    let acceptedSquares = [];
+    let rejectedSquares = [];
+  
+    fSquares.forEach(fSquare => {
+      console.log(fSquare.x + " " + fSquare.y);
+      let square = this.squares[fSquare.x][fSquare.y];
+      if ((this.gameState === "inProgress" || this.gameState === "waitingForPlayers") &&
+          square.ownerId === socket.id && this.users[socket.id].drawing) {
+        square.color = fSquare.color;
+        acceptedSquares.push(square);
+      } else {
+        rejectedSquares.push(square);
+      }
+    });
+  
+    // Emit accepted squares as an array
+    if (acceptedSquares.length > 0) {
+      this.EmitToUserObject('b.squares', acceptedSquares);
     }
-    else
-    {
-      socket.emit('b.square', square);
+  
+    // Emit rejected squares as an array
+    if (rejectedSquares.length > 0) {
+      socket.emit('b.squares', rejectedSquares);
     }
-  };
-
+  }
+  
   //PLAYERS---------------------------------------------------------------------------------------------------------------------------------------------------------
 
   AssignRoles()
   {
-    const shuffledUsers = GetUsersArray(this.users).sort((a, b) => a.timesDrawing - b.timesDrawing );
+    const shuffledUsers = GetUsersArray(this.users).sort(() => Math.random() - 0.5).sort((a, b) => a.timesDrawing - b.timesDrawing );
 
     let drawersCount;
     if(shuffledUsers.length < 3)
@@ -279,7 +292,7 @@ class GameRoom {
     this.EmitWord();
 
     socket.on('f.reroll', (fUser) => this.HandleReroll(socket, fUser));
-    socket.on('f.square', (fSquare) => this.HandleSquare(socket, fSquare));
+    socket.on('f.squares', (fSquares) => this.HandlePaintingSquares(socket, fSquares));
     socket.on('f.message', (fMessage) => this.HandleMessage(socket, fMessage));
   
     socket.on('disconnect', (reason) => {
@@ -433,7 +446,7 @@ class GameRoom {
     }
     else if(commandName == '/round')
     {
-      this.NewRound();
+      this.RoundEnd();
     }
   }
 }
