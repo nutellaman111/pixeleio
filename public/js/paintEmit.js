@@ -12,7 +12,7 @@ let holdTimer;
 const holdDuration = 1000; // 1 second
 
 // Function to handle the button hold 
-function onHold() {
+function heldFor1Second() {
   console.log("clear!");
   ClearAll()
   // Perform your desired action here
@@ -20,18 +20,20 @@ function onHold() {
 
 // Function to start the timer
 function startHoldTimer() {
-  holdTimer = setTimeout(onHold, holdDuration);
+  console.log("hold start")
+  holdTimer = setTimeout(heldFor1Second, holdDuration);
 }
 
 // Function to clear the timer
 function clearHoldTimer() {
+  console.log("hold stop")
   clearTimeout(holdTimer);
 }
 
 // Event listeners for the button
-clearButton.addEventListener('mousedown', startHoldTimer);
-clearButton.addEventListener('mouseup', clearHoldTimer);
-clearButton.addEventListener('mouseout', clearHoldTimer);
+clearButton.onpointerdown = startHoldTimer;
+clearButton.onpointerup = clearHoldTimer;
+//clearButton.addEventListener('mouseout', clearHoldTimer);
 
 
 //bucket tool---------------------------------------------------
@@ -93,6 +95,12 @@ bucketCheckbox.addEventListener('change', (event) => {
     //left click = draw
     if(mouse[0])
     {
+
+      if(!IsDrawableGameState()) //return if no one can draw rn
+      {
+        return;
+      }
+
       if(square.ownerId != socket.id) //return if the square isnt owned by this user
       {
         return;
@@ -133,9 +141,7 @@ bucketCheckbox.addEventListener('change', (event) => {
   
     const startSquare = squares[startX][startY];
     const oldColor = startSquare.color;
-  
-    if (oldColor === newColor) return changedSquares; // No need to fill if colors are the same
-  
+    
     const stack = [{ x: startX, y: startY }];
   
     while (stack.length > 0) {

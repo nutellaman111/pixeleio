@@ -9,22 +9,32 @@ socket.on('b.users', (bUsers) => {
   UpdateRerollBlock();
 })
 
+function GetUsersArray() {
+  if(users)
+  {
+    // Get the keys (user IDs) from the users object
+    const userIds = Object.keys(users);
+    
+    // Map over the user IDs to get the user objects
+    return userIds.map(id => users[id]);
+  }
+  return [];
+
+}
+
 function RenderUserList()
 {
     // Clear existing content
     playersDiv.innerHTML = '';
 
-    const userIds = Object.keys(users);
-  
+    const guessingUsers = GetUsersArray().sort((a, b) => b.score - a.score);
   
     // Loop through players array and create player elements
-    userIds.forEach(userId => {
+    guessingUsers.forEach(player => {
   
-        const player = users[userId];
         // Create a container for each player
         const playerDiv = document.createElement('div');
         playerDiv.classList.add('player');
-        playerDiv.style.backgroundColor = player.color;
   
         // Create player icon/*
 
@@ -45,6 +55,24 @@ function RenderUserList()
         playerDiv.appendChild(playerIcon);
         playerDiv.appendChild(playerName);
         playerDiv.appendChild(playerScore);
+
+        if(player.guessed)
+        {
+          playerDiv.style.backgroundColor = player.color;
+          playerDiv.style.color = "white";
+        }
+        else
+        {
+          playerDiv.style.backgroundColor = "white";
+          playerDiv.style.color = player.color;
+        }
+
+        if(!player.drawing)
+        {
+          playerDiv.style.border = `2px solid ${player.color}`; // Add this line for the border
+        }
+
+
   
         // Append playerDiv to the player list
         playersDiv.appendChild(playerDiv);
@@ -64,7 +92,7 @@ function StateIconOfPlayer(player) {
   }
   else
   {
-    playerIcon.classList.add('fa-solid', 'fa-circle-question');
+    playerIcon.classList.add('fa-solid', 'fa-comment');
   }
 
   return playerIcon;

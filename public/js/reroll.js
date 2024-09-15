@@ -12,16 +12,21 @@ rerollCheckbox.addEventListener('change', () => {
 let rerollUsed = false;
 socket.on('b.rerollUsed', (bRerollUsed) => {
     rerollUsed = bRerollUsed;
+    if(rerollUsed)
+    {
+        showNotification("Word Re-rolled");
+        console.log("showing notification");
+    }
     UpdateRerollBlock();
 });
 
 function UpdateRerollBlock()
 {
-    if(thisUser.drawing && !rerollUsed)
+    if(thisUser.drawing && !rerollUsed && (gameState == "inProgress"))
     {
         rerollCheckbox.checked = thisUser.reroll;
-        rerollText.textContent = "Reroll: (" + GetUsersArray(users).filter(x => x.drawing && x.reroll).length + "/" +
-        Math.ceil(GetUsersArray(users).filter(x => x.drawing).length * 0.75) + ")";
+        rerollText.textContent = "Reroll: (" + GetUsersArray().filter(x => x.drawing && x.reroll).length + "/" +
+        Math.ceil(GetUsersArray().filter(x => x.drawing).length * 0.75) + ")";
         rerollBlock.style.display = rerollBlockOriginalDisplayStyle;
     }
     else
@@ -30,15 +35,3 @@ function UpdateRerollBlock()
     }
 }
 
-function GetUsersArray(users) {
-    if(users)
-    {
-      // Get the keys (user IDs) from the users object
-      const userIds = Object.keys(users);
-      
-      // Map over the user IDs to get the user objects
-      return userIds.map(id => users[id]);
-    }
-    return [];
-  
-}

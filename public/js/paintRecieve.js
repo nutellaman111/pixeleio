@@ -148,5 +148,5 @@ function RenderSquare(square) {
   element.style.borderBottom = borderBottom;
   element.style.borderLeft = borderLeft;
 
-  element.style.cursor = square.ownerId == socket.id ? (bucketSelected? 'pointer' : 'crosshair' ) : 'no-drop';
+  element.style.cursor = ((square.ownerId == socket.id) && IsDrawableGameState()) ? (bucketSelected? 'pointer' : 'crosshair' ) : 'no-drop';
 }

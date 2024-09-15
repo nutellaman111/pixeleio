@@ -8,12 +8,27 @@ color: var(--userColor);
 
 /*big stuff----------------------*/
 
-  
-
-
 body {
     margin: 0;
     font-family: Arial, sans-serif;
+}
+
+
+/*game container-----------------------*/
+.container {
+    display: flex;
+    height: 100vh;
+    padding-bottom: 200px;
+    box-sizing: border-box;
+    background-color: rgb(144, 173, 207);
+    flex-direction: column; /* Arrange items top to bottom */
+    align-items: center; /* Center the content horizontally */
+}
+
+.leftToRight {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
 }
 
 /*above canvas-------------------*/
@@ -54,6 +69,7 @@ body {
 .canvas-container {
     background-color: white;
     border-radius: 5px;
+    position: relative;
 }
 
   
@@ -110,7 +126,6 @@ body {
     background-color: #ccc; /* Default background color */
     box-sizing: border-box;
     justify-content: center;
-    z-index: 100;
     padding: 0px 10px;
 
     border-radius: 10%;
@@ -234,23 +249,6 @@ body {
 }
 
 
-/*game container-----------------------*/
-.container {
-    display: flex;
-    height: 100vh;
-    padding-bottom: 200px;
-    box-sizing: border-box;
-    background-color: rgb(137, 171, 214);
-    flex-direction: column; /* Arrange items top to bottom */
-    align-items: center; /* Center the content horizontally */
-}
-
-/*game container-----------------------*/
-.leftToRight {
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-}
 
 /*chat---------------------------------*/
 .chat {
@@ -285,6 +283,7 @@ body {
     color: black;
     text-align: center;
     align-items: center;
+    background-color: #ffffff00;
 }
 
 .message {
@@ -321,7 +320,6 @@ button { /*send button*/
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
 }
 
 .textInput {
@@ -358,7 +356,7 @@ button { /*send button*/
     padding: 5px;
     border-radius: 5px;
     overflow-wrap: break-word; 
-    color: white;
+    box-sizing: border-box;
 }
 
 .player-icon {
@@ -371,5 +369,31 @@ button { /*send button*/
 .player-name {
     font-weight: bold;
     margin-right: 10px;
-    color: white;
+}
+
+/*NOTIFICATOIN----------------------------------------------------*/
+#notification-container {
+    position: absolute; /* Changed from absolute to fixed */
+    bottom: 50%;
+    right: 50%;
+    z-index: 9999; 
+    transform: translate(50%, 50%); /* Centers the container */
+}
+
+.notification {
+    background-color: #333;
+    color: #fff;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    position: relative;
+    opacity: 1;
+    transition: opacity 1s cubic-bezier(0.5, 0, 1, .5), transform 1s cubic-bezier(0, .5, .5, 1);
+    transform: translateY(0);
+    z-index: 99999; 
+}
+
+.notification.fade-out {
+    opacity: 0;
+    transform: translateY(-50px);
 }

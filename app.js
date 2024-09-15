@@ -53,9 +53,17 @@ class GameRoom {
     this.gridWidth = 14; // Change this to the desired number of rows
     this.gridHeight = 14; // Chan ge this to the desired number of columns
 
-    //140, 5 
-    this.roundDuration = 140 * 1000;
-    this.roundEndingDuration = 10 * 1000;
+    if(false)
+    {
+      this.roundDuration = 5 * 1000;
+      this.roundEndingDuration = 3 * 1000;
+    }
+    else
+    {
+      this.roundDuration = 140 * 1000;
+      this.roundEndingDuration = 5 * 1000;
+    }
+
     
     this.users = {};
     this.words = require("./data/words.json");
@@ -106,6 +114,7 @@ class GameRoom {
   {
     this.gameState = "roundEnding"
     this.EmitToUserObject('b.gameState',this.gameState)
+    this.EmitWord();
     this.SetTimer(() => this.NewRound(), this.roundEndingDuration)
   }
 
@@ -138,6 +147,12 @@ class GameRoom {
   HandleReroll(socket, fUser)
   {
     let user = this.users[socket.id];
+
+    if(this.gameState != "inProgress")
+    {
+      socket.emit('b.users',this.users);
+      return;
+    }
     user.reroll = fUser.reroll;
 
     let usersArray = GetUsersArray(this.users);
@@ -166,12 +181,16 @@ class GameRoom {
   
   EmitWord()
   {
-    let allowedPeople = GetUsersArray(this.users).filter(x=>x.drawing || x.guessed)
-    EmitToUsersArray(allowedPeople, 'b.word', this.word)
+    let usersArray = GetUsersArray(this.users);
 
-    let censoredWord = this.word.replace(' ', '-').replace(/[a-zA-Z]/g, " _ ");
-    let unallowedPeople = GetUsersArray(this.users).filter(x=>!x.drawing && !x.guessed)
-    EmitToUsersArray(unallowedPeople, 'b.word', censoredWord)
+    usersArray.forEach(user => {
+        if (user.drawing || user.guessed || this.gameState !== "inProgress") {
+            EmitToUsersArray([user], 'b.word', this.word); // Emit actual word
+        } else {
+            let censoredWord = this.word.replace(' ', '-').replace(/[a-zA-Z]/g, " _ ");
+            EmitToUsersArray([user], 'b.word', censoredWord); // Emit censored word
+        }
+    });
   }
 
   //BOARD------------------------------------------------------------------------------------------------------------------------------------------
@@ -229,6 +248,12 @@ class GameRoom {
 
   AssignRoles()
   {
+    //decay the amount of times drawn
+    let usersArr = GetUsersArray(this.users);
+    usersArr.forEach(user => {
+      user.timesDrawing /= 2;
+    })
+
     const shuffledUsers = GetUsersArray(this.users).sort(() => Math.random() - 0.5).sort((a, b) => a.timesDrawing - b.timesDrawing );
 
     let drawersCount;
@@ -378,12 +403,15 @@ class GameRoom {
 
     this.EmitUsers();
 
-
     console.log("filtered users = " + usersArray.filter(x=>!x.drawing && !x.guessed));
     if(!usersArray.filter(x=>!x.drawing && !x.guessed).length) //if no onbe is still guessing
     {
       console.log("MEOW");
-      this.NewRound();
+      this.RoundEnd();
+    }
+    else
+    {
+      EmitToUsersArray([guesser],'b.word', this.word)
     }
 
   }
@@ -418,6 +446,7 @@ class GameRoom {
     {
       this.users[socketId].guessed = false;
       this.users[socketId].drawing = true;
+      this.EmitToUserObject(this.users[socketId], 'b.rerollUsed', this.rerollUsed)
       this.OnPlayersChangeIncludingDrawingStatus();
     }
     if(commandName == '/guess')
@@ -444,9 +473,13 @@ class GameRoom {
       this.DivideBoard(true);
       this.EmitToUserObject('b.canvas', this.squares)
     }
-    else if(commandName == '/round')
+    else if(commandName == '/end')
     {
       this.RoundEnd();
+    }
+    else if(commandName == '/restart')
+    {
+      this.NewRound();
     }
   }
 }
