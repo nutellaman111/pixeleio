@@ -1,4 +1,4 @@
-const {DivideSquaresToPeople, GetUsersArray, AreWordsClose, AreWordsEquivelent} = require('./utils.js');
+const {DivideSquaresToPeople, AreWordsClose, AreWordsEquivelent} = require('./utils.js');
 
 
 const express = require('express')
@@ -85,7 +85,7 @@ class GameRoom {
       this.SendMessageFromSystem('The word was ' + this.word)
     }
 
-    GetUsersArray(this.users).forEach(x => {
+    this.GetUsersArray().forEach(x => {
       x.reroll = false;
       x.guessed = false;
     })
@@ -121,7 +121,7 @@ class GameRoom {
   //EMISSION------------------------------------------------------------------------------------------------------------------------
   EmitToUserObject(eventName, eventData)
   {
-    EmitToUsersArray(GetUsersArray(this.users), eventName, eventData);
+    EmitToUsersArray(this.GetUsersArray(), eventName, eventData);
   }
 
   //TIME------------------------------------------------------------------------------------------------------------------------------------
@@ -155,7 +155,7 @@ class GameRoom {
     }
     user.reroll = fUser.reroll;
 
-    let usersArray = GetUsersArray(this.users);
+    let usersArray = this.GetUsersArray();
     if(usersArray.filter(x => x.drawing && x.reroll).length >= Math.ceil(usersArray.filter(x => x.drawing).length * 0.75))
     {
       this.rerollUsed = true;
@@ -181,7 +181,7 @@ class GameRoom {
   
   EmitWord()
   {
-    let usersArray = GetUsersArray(this.users);
+    let usersArray = this.GetUsersArray();
 
     usersArray.forEach(user => {
         if (user.drawing || user.guessed || this.gameState !== "inProgress") {
@@ -213,7 +213,7 @@ class GameRoom {
 
   DivideBoard(maintainOrder)
   {
-    const usersArr = GetUsersArray(this.users).filter(user => user.drawing);
+    const usersArr = this.GetUsersArray().filter(user => user.drawing);
     DivideSquaresToPeople(this.squares, usersArr, maintainOrder);
   }
 
@@ -246,15 +246,28 @@ class GameRoom {
   
   //PLAYERS---------------------------------------------------------------------------------------------------------------------------------------------------------
 
+  GetUsersArray()
+  {
+    if(this.users)
+      {
+        // Get the keys (user IDs) from the users object
+        const userIds = Object.keys(this.users);
+        
+        // Map over the user IDs to get the user objects
+        return userIds.map(id => this.users[id]);
+      }
+      return [];
+  }
+
   AssignRoles()
   {
     //decay the amount of times drawn
-    let usersArr = GetUsersArray(this.users);
+    let usersArr = this.GetUsersArray();
     usersArr.forEach(user => {
       user.timesDrawing /= 2;
     })
 
-    const shuffledUsers = GetUsersArray(this.users).sort(() => Math.random() - 0.5).sort((a, b) => a.timesDrawing - b.timesDrawing );
+    const shuffledUsers = this.GetUsersArray().sort(() => Math.random() - 0.5).sort((a, b) => a.timesDrawing - b.timesDrawing );
 
     let drawersCount;
     if(shuffledUsers.length < 3)
@@ -278,11 +291,23 @@ class GameRoom {
 
   OnPlayersChangeIncludingDrawingStatus()
   {
-    this.EmitToUserObject('b.users', this.users)
+    let playersArr = this.GetUsersArray();
+    /*if(!playersArr.length)
+    {
+      //delete this.gameRooms[this.roomCode];
+    }*/
+    if ((!playersArr.some(x => x.drawing)) && this.gameState == "inProgress") {
+      console.log("no one drawing")
+      this.EmitUsers();
+      this.RoundEnd();
+    } else {
+      this.EmitUsers();
 
-    this.DivideBoard(true);
+      this.DivideBoard(true);
+  
+      this.EmitToUserObject('b.canvas-ownership', this.squares)
+    }
 
-    this.EmitToUserObject('b.canvas-ownership', this.squares)
   }
 
 
@@ -321,14 +346,23 @@ class GameRoom {
     socket.on('f.message', (fMessage) => this.HandleMessage(socket, fMessage));
   
     socket.on('disconnect', (reason) => {
-      if(this.users[socket.id])
+      this.HandleDisconnect(socket, reason)
+
+    })
+  }
+
+  HandleDisconnect(socket, reason)
+  {
+    if(this.users[socket.id])
       {
+
         this.SendMessageFromSystem(this.users[socket.id].name + " has left")
     
         delete this.users[socket.id];
+
+    
         this.OnPlayersChangeIncludingDrawingStatus();
       }
-    })
   }
 
 
@@ -349,14 +383,14 @@ class GameRoom {
       //drawing - send to people who guessed
       if(currentUser.drawing)
       {
-        sendTo = GetUsersArray(this.users).filter(x => x.guessed || x.id == socket.id)
+        sendTo = this.GetUsersArray().filter(x => x.guessed || x.id == socket.id)
         EmitToUsersArray(sendTo, 'b.message', fMessage)
       }
 
       //guessed - send to people who guessed or are drawing
       else if(currentUser.guessed)
       {
-        sendTo = GetUsersArray(this.users).filter(x => x.guessed || x.drawing)
+        sendTo = this.GetUsersArray().filter(x => x.guessed || x.drawing)
         EmitToUsersArray(sendTo, 'b.message', fMessage)
       }
 
@@ -380,7 +414,7 @@ class GameRoom {
 
   UserGuessedRight(guesser)
   {
-    let usersArray = GetUsersArray(this.users);
+    let usersArray = this.GetUsersArray();
 
     guesser.guessed = true;
     let timeLeft = this.GetTimeRemainingMS();

@@ -376,6 +376,9 @@ button { /*send button*/
     position: absolute; /* Changed from absolute to fixed */
     bottom: 50%;
     right: 50%;
+    /*width: 100px;
+    height: 100px;
+    background-color: #00a2e8;*/
     z-index: 9999; 
     transform: translate(50%, 50%); /* Centers the container */
 }
@@ -388,7 +391,7 @@ button { /*send button*/
     border-radius: 5px;
     position: relative;
     opacity: 1;
-    transition: opacity 1s cubic-bezier(0.5, 0, 1, .5), transform 1s cubic-bezier(0, .5, .5, 1);
+    transition: opacity 1s cubic-bezier(0.5, 0, 1, 0.5), transform 1s cubic-bezier(0, 0.5, 0.5, 1);
     transform: translateY(0);
     z-index: 99999; 
 }

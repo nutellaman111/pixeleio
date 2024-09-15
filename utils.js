@@ -140,5 +140,5 @@ function standardiseWord(str) {
 }
 
 
-module.exports = { DivideSquaresToPeople, GetUsersArray, AreWordsEquivelent, AreWordsClose  };
+module.exports = { DivideSquaresToPeople, AreWordsEquivelent, AreWordsClose  };
 
