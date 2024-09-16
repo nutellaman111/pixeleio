@@ -381,34 +381,41 @@ class GameRoom {
     {
       let sendTo;
 
-      //drawing - send to people who guessed
-      if(currentUser.drawing)
+      if(this.gameState == "inProgress")
       {
-        sendTo = this.GetUsersArray().filter(x => x.guessed || x.id == socket.id)
-        EmitToUsersArray(sendTo, 'b.message', fMessage)
+        //drawing - send to people who guessed
+        if(currentUser.drawing)
+          {
+            sendTo = this.GetUsersArray().filter(x => x.guessed || x.id == socket.id)
+            EmitToUsersArray(sendTo, 'b.message', fMessage)
+          }
+    
+          //guessed - send to people who guessed or are drawing
+          else if(currentUser.guessed)
+          {
+            sendTo = this.GetUsersArray().filter(x => x.guessed || x.drawing)
+            EmitToUsersArray(sendTo, 'b.message', fMessage)
+          }
+    
+          //guessing - send to everyone unless its correct or close
+          else 
+          {
+            if(AreWordsEquivelent(fMessage.content, this.word))
+            {
+              this.UserGuessedRight(currentUser);
+            }
+            else if(AreWordsClose(fMessage.content, this.word)){
+              this.SendMessageFromSystem(fMessage.content + " is CLOSE!", [currentUser]);
+            }
+            else
+            {
+              this.EmitToUserObject('b.message', fMessage)
+            }
+          }
       }
-
-      //guessed - send to people who guessed or are drawing
-      else if(currentUser.guessed)
+      else
       {
-        sendTo = this.GetUsersArray().filter(x => x.guessed || x.drawing)
-        EmitToUsersArray(sendTo, 'b.message', fMessage)
-      }
-
-      //guessing - send to everyone unless its correct or close
-      else 
-      {
-        if(AreWordsEquivelent(fMessage.content, this.word))
-        {
-          this.UserGuessedRight(currentUser);
-        }
-        else if(AreWordsClose(fMessage.content, this.word)){
-          this.SendMessageFromSystem(fMessage.content + " is CLOSE!", [currentUser]);
-        }
-        else
-        {
-          this.EmitToUserObject('b.message', fMessage)
-        }
+        this.EmitToUserObject('b.message', fMessage)
       }
     }
   }
