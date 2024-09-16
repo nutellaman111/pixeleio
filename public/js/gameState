@@ -1,0 +1,6 @@
+let gameState;
+function UpdateGameState(bGameState)
+{
+    gameState = bGameState;
+}
+

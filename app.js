@@ -332,10 +332,11 @@ class GameRoom {
         score: 0
     };
 
-    socket.emit('b.gameState', this.gameState)
     socket.emit('b.users', this.users)
+    socket.emit('b.gameState', this.gameState)
     socket.emit('b.canvas', this.squares);
     socket.emit('b.time', this.GetTimeRemainingMS());
+    socket.emit('b.rerollUsed', this.rerollUsed);
 
     //send the player list to the player
     this.OnPlayersChangeIncludingDrawingStatus()

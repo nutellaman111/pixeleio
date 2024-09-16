@@ -28,13 +28,9 @@ function sendMessage() {
     }
 }
 
-socket.on('b.message', (message) => {
-    displayMessage(message)
-})
-
 
 // Function to display a message
-function displayMessage(message) {
+function DisplayMessage(message) {
     let author = users[message.authorId];
 
     const messageElement = document.createElement('div');
@@ -80,13 +76,13 @@ function displayMessage(message) {
 function UpdateMessagestSentTo()
 {
     let textResult;
-    if(thisUser.guessed)
+    if(thisUser.guessed && gameState == "inProgress")
     {
         textResult = "Messages visible to people who are drawing or have guessed the word"
-    } else if(thisUser.drawing)
+    } else if(thisUser.drawing && gameState == "inProgress")
     {
         textResult = "Messages visible to people who have guessed the word"
-    } else { //guessing
+    } else { //guessing or game not in progress
         textResult = "Messages visible to everyone"
     }
     messagesSentToElement.textContent = textResult;

@@ -1,6 +1,7 @@
 const wordDisplay = document.getElementById('wordDisplay');
 
-socket.on('b.word', (word) => {
+function DisplayWord(word)
+{
     if((gameState === "roundEnding" || thisUser.guessed) && !thisUser.drawing) {
         // Add the underlined word display with no spaces
         wordDisplay.innerHTML = `"<span style="text-decoration: underline;">${word}</span>"`;
@@ -8,4 +9,4 @@ socket.on('b.word', (word) => {
     else {
         wordDisplay.textContent = `"${word}"`;
     }
-});
+}

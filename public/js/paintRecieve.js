@@ -1,8 +1,8 @@
 const grid = document.getElementById('grid');
 let squares = null;
 
-socket.on('b.canvas', (bSquares) => {
-
+function CreateCanvas(bSquares)
+{
   let width = bSquares.length;
   let height = bSquares[0].length;
 
@@ -25,41 +25,28 @@ socket.on('b.canvas', (bSquares) => {
       squares[x][y].div = squareDiv;
     }
   }
-
-  RenderBoard();
-  
-})
-socket.on('b.canvas-ownership', (bSquares) => {
-
-    if(squares == null)
+}
+function UpdateCanvasOwnership(bSquares)
+{
+  let width = bSquares.length;
+  let height = bSquares[0].length;
+    
+  for(let y = 0; y < height; y++)
+  {
+    for(let x = 0; x < width; x++)
     {
-
+      squares[x][y].ownerId = bSquares[x][y].ownerId;
     }
-    else
-    {
-      let width = bSquares.length;
-      let height = bSquares[0].length;
-        
-      for(let y = 0; y < height; y++)
-      {
-        for(let x = 0; x < width; x++)
-        {
-          squares[x][y].ownerId = bSquares[x][y].ownerId;
-        }
-      }
-      
-      RenderBoard();
-    }
-})
+  }
+}
 
-
-
-socket.on('b.squares', (bSquares) => {
+function UpdateSquares(bSquares)
+{
   bSquares.forEach(bSquare => {
     squares[bSquare.x][bSquare.y].color = bSquare.color;
     RenderSquare(squares[bSquare.x][bSquare.y]);
   });
-});
+}
 
 function RenderBoard()
 {
@@ -70,7 +57,6 @@ function RenderBoard()
   }
   else
   {
-    console.log("glow disable");
     grid.setAttribute('data-complete', false);
   }
 

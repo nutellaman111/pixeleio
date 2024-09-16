@@ -10,15 +10,15 @@ rerollCheckbox.addEventListener('change', () => {
 });
 
 let rerollUsed = false;
-socket.on('b.rerollUsed', (bRerollUsed) => {
+function UpdateRerollUsed(bRerollUsed)
+{
     rerollUsed = bRerollUsed;
     if(rerollUsed)
     {
         showNotification("Word Re-rolled");
         console.log("showing notification");
     }
-    UpdateRerollBlock();
-});
+}
 
 function UpdateRerollBlock()
 {

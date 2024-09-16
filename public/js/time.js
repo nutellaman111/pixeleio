@@ -58,6 +58,7 @@ const TimerModule = (function() {
     };
 })();
 
-socket.on('b.time', (duration) => {
+function UpdateTime(duration)
+{
     TimerModule.startTimer(duration);
-});
+}

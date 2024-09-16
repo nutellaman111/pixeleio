@@ -123,7 +123,6 @@ bucketCheckbox.addEventListener('change', (event) => {
       }
 
   
-      console.log("painted square");
   
     }
 
@@ -169,7 +168,6 @@ bucketCheckbox.addEventListener('change', (event) => {
   {
     let ownedSquares = squares.flat().filter(x => x.ownerId == socket.id && x.color != "#ffffff");
     ownedSquares.forEach(square => {
-      console.log("hey");
       square.color = "#ffffff";
       RenderSquare(square)
     });

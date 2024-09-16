@@ -1,13 +1,12 @@
 let users;
 let thisUser;
 const playersDiv = document.getElementById('players');
-socket.on('b.users', (bUsers) => {
+
+function UpdateUsers(bUsers)
+{
   users = bUsers;
   thisUser = users[socket.id];
-  RenderUserList();
-  UpdateMessagestSentTo();
-  UpdateRerollBlock();
-})
+}
 
 function GetUsersArray() {
   if(users)
