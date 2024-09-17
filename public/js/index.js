@@ -7,10 +7,16 @@ let eventsCalled = {}; //stores for each event whether it was called at least on
 let eventFunctions = [
     {
         functionToCall: DisplayWord,
-        activators: ["b.gameState", "b.users", "b.word"],
-        dependencies: ["b.gameState", "b.users", "b.word"],
+        activators: ["b.gameState", "b.users", "b.word", "b.languageDirection"],
+        dependencies: ["b.gameState", "b.users", "b.word", "b.languageDirection"],
         dataFrom: "b.word",
         priority: 0
+    },{
+        functionToCall: UpdateLanguageDirection,
+        activators: ["b.languageDirection"],
+        dependencies: [],
+        dataFrom: "b.languageDirection",
+        priority: 10
     },{
         functionToCall: RenderBoard,
         activators: ["b.gameState", "b.canvas", "b.users", "b.canvas-ownership"],

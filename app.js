@@ -1,4 +1,5 @@
 const {DivideSquaresToPeople, AreWordsClose, AreWordsEquivelent} = require('./utils.js');
+const { GetDictionary } = require('./dictionaries.js');
 
 
 const express = require('express')
@@ -6,7 +7,7 @@ const app = express()
 
 const http = require('http')
 const server = http.createServer(app)
-const { Server } = require('socket.io')
+const { Server } = require('socket.io');
 const io = new Server(server)
 const port = 3000
 app.use(express.static('public'))
@@ -49,6 +50,7 @@ class GameRoom {
   constructor(creatorSocket, fUser, roomCode)
   {
     this.roomCode = roomCode;
+    this.dictionary = GetDictionary("hebrew");
 
     this.gridWidth = 14; // Change this to the desired number of rows
     this.gridHeight = 14; // Chan ge this to the desired number of columns
@@ -66,7 +68,6 @@ class GameRoom {
 
     
     this.users = {};
-    this.words = require("./data/words.json");
     this.rerollUsed = false;
     this.gameState = "waitingForPlayers";
 
@@ -174,9 +175,7 @@ class GameRoom {
   //WORD---------------------------------------------------------------------------------------------------------------------------------------------
   SetRandomWord()
   {
-    const randomIndex = Math.floor(Math.random() * Math.min(this.words.length, 1000)); //words sorted from easy to hard - pick from the 1000 easiest
-    this.word = this.words[randomIndex].replace('-',' ');
-    this.words.splice(randomIndex, 1);
+    this.word = this.dictionary.PopRandomWord();
   }
   
   EmitWord()
@@ -187,7 +186,7 @@ class GameRoom {
         if (user.drawing || user.guessed || this.gameState !== "inProgress") {
             EmitToUsersArray([user], 'b.word', this.word); // Emit actual word
         } else {
-            let censoredWord = this.word.replace(' ', '-').replace(/[a-zA-Z]/g, " _ ");
+            let censoredWord = this.dictionary.CensorWord(this.word);
             EmitToUsersArray([user], 'b.word', censoredWord); // Emit censored word
         }
     });
@@ -332,6 +331,7 @@ class GameRoom {
         score: 0
     };
 
+    socket.emit('b.languageDirection', this.dictionary.languageDirection)
     socket.emit('b.users', this.users)
     socket.emit('b.gameState', this.gameState)
     socket.emit('b.canvas', this.squares);
@@ -400,11 +400,11 @@ class GameRoom {
           //guessing - send to everyone unless its correct or close
           else 
           {
-            if(AreWordsEquivelent(fMessage.content, this.word))
+            if(this.dictionary.AreWordsEquivelent(fMessage.content, this.word))
             {
               this.UserGuessedRight(currentUser);
             }
-            else if(AreWordsClose(fMessage.content, this.word)){
+            else if(this.dictionary.AreWordsClose(fMessage.content, this.word)){
               this.SendMessageFromSystem(fMessage.content + " is CLOSE!", [currentUser]);
             }
             else

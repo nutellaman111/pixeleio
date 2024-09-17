@@ -63,82 +63,9 @@ function DivideSquaresToPeople(squares, users, maintainOrder) {
   );
 }
 
-function GetUsersArray(users) {
-  if(users)
-  {
-    // Get the keys (user IDs) from the users object
-    const userIds = Object.keys(users);
-    
-    // Map over the user IDs to get the user objects
-    return userIds.map(id => users[id]);
-  }
-  return [];
-
-}
-
-function AreWordsEquivelent(originalWord1, originalWord2)
-{
-  const word1 = standardiseWord(originalWord1)
-  const word2 = standardiseWord(originalWord2)
-  return word1 == word2;
-}
-
-function AreWordsClose(originalWord1, originalWord2) {
-
-  const word1 = standardiseWord(originalWord1)
-  const word2 = standardiseWord(originalWord2)
-
-  const len1 = word1.length;
-  const len2 = word2.length;
-
-  if (Math.abs(len1 - len2) > 1) {
-      return false; // More than one letter difference in length means more than one change
-  }
-
-  let i = 0, j = 0;
-  let foundDifference = false;
-
-  while (i < len1 && j < len2) {
-      if (word1[i] !== word2[j]) {
-          if (foundDifference) return false;
-          foundDifference = true;
-
-          // Check for replacement or insertion/removal
-          if (len1 > len2) {
-              i++; // Removal case
-          } else if (len2 > len1) {
-              j++; // Insertion case
-          } else {
-              i++;
-              j++; // Replacement case
-          }
-      } else {
-          i++;
-          j++;
-      }
-  }
-
-  // Handle the case where the end of one string is reached
-  if (i < len1 || j < len2) {
-      if (foundDifference) return false;
-      foundDifference = true;
-  }
-
-  return true;
-}
-
-function standardiseWord(str) {
-  if (!str) return '';
-
-  // Convert to lowercase
-  const lowerCase = str.toLowerCase();
-
-  // Remove non-letter characters
-  const result = lowerCase.replace(/[^a-z]/g, '');
-
-  return result;
-}
 
 
-module.exports = { DivideSquaresToPeople, AreWordsEquivelent, AreWordsClose  };
+
+
+module.exports = { DivideSquaresToPeople};
 
