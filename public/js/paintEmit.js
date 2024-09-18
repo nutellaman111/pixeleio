@@ -80,6 +80,11 @@ bucketCheckbox.addEventListener('change', (event) => {
 
   function handleMouseAction(e) {
 
+    if(squares == null)
+    {
+      return;
+    }
+
     let square = SquareFromDiv(e.target) //return if not on a square
     if(square == null)
     {

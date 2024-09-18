@@ -39,7 +39,7 @@ class dictionary
         }
     
         // Get a random index
-        const randomIndex = 926//Math.floor(Math.random() * this.words.length);
+        const randomIndex = Math.floor(Math.random() * this.words.length);
     
         // Remove the word at the random index and store it in removedWords
         const word = this.words.splice(randomIndex, 1)[0];
@@ -151,7 +151,7 @@ class WordObject
                 return revealedIndices.includes(index) ? char : '_'; // reveal or censor letters
             })
             .join(' '); // add spaces after each character (including spaces)
-        return temp == this.censored;
+        return temp != this.censored;
     }
 
     // returns whether there was a change

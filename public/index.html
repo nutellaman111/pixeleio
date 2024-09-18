@@ -14,15 +14,22 @@
 
   <div id="usernameOverlay" class="overlay">
     <div class="overlay-content">
-        <h2>enter stuff & pick a color plz:</h2>
+        <h2>stuff:</h2>
         <div class="input-container">
-          <span class="input-label">Profile:</span>
+          <span class="input-label">name & color:</span>
           <input type="text" id="usernameInput" placeholder="Username" class="textInput" />
           <input type="color" id="colorPicker" name="colorPicker" value="#ff0000">
         </div>
         <div class="input-container">
           <span class="input-label">Room:</span>
           <input type="text" id="roomInput" placeholder="Room Code" class="textInput" value="default"/>
+        </div>
+        <div class="input-container">
+          <span class="input-label">Language:</span>
+          <select id="languageSelect" class="textInput">
+            <option value="english">English</option>
+            <option value="hebrew">עברית</option>
+          </select>
         </div>
         <button id="submitUsername">Submit</button>
     </div>
@@ -81,10 +88,10 @@
 
   <script src="https://kit.fontawesome.com/6276257959.js" crossorigin="anonymous"></script>
   <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
-  <script src="./js/gameState"></script>
   <script src="./js/io.js"></script>
   <script src="./js/colorUtils.js"></script>
   <script src="./js/usernameEnter.js"></script>
+  <script src="./js/gameState"></script>
   <script src="./js/userList.js"></script>
   <script src="./js/paintEmit.js"></script>
   <script src="./js/paintRecieve.js"></script>

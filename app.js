@@ -21,14 +21,14 @@ io.on('connection', (socket) => {
 
   //someone submitted their username and 
   socket.on('f.user', (data) => {
-    const { newUser, roomCode } = data;
+    const { newUser, roomCode, language } = data;
     if(gameRooms[roomCode])
     {
       gameRooms[roomCode].PlayerConnected(socket, newUser)
     }
     else
     {
-      gameRooms[roomCode] = new GameRoom(socket, newUser, roomCode);
+      gameRooms[roomCode] = new GameRoom(socket, newUser, roomCode, language);
     }
   });
 
@@ -47,12 +47,14 @@ class GameRoom {
 
   //GAME LOOP-----------------------------------------------------------------------------------------------------------------------------------------
 
-  constructor(creatorSocket, fUser, roomCode)
+  constructor(creatorSocket, fUser, roomCode, language)
   {
     this.roomCode = roomCode;
-    this.dictionary = GetDictionary("hebrew");
+    this.dictionary = GetDictionary(language);
 
-    this.gridWidth = 14; // Change this to the desired number of rows
+    this.maxHintsPercent = 0.4;
+
+    this.gridWidth = 14; // Change this to the desired number of rows 
     this.gridHeight = 14; // Chan ge this to the desired number of columns
 
     if(false)
@@ -205,7 +207,7 @@ class GameRoom {
 
   UpdateHints()
   {
-    let percentage = Math.min(0.4, 0.5 * (this.GetTimePassedMS() / this.currentWaitDuration));
+    let percentage = Math.min(this.maxHintsPercent, 1.25 * this.maxHintsPercent * (this.GetTimePassedMS() / this.currentWaitDuration));
     if(this.wordObject.UpdateRevealedPercentage(percentage)){
       this.EmitWordToEveryone();
     };
@@ -492,6 +494,10 @@ class GameRoom {
     }
   }
 
+
+  //slash commands ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
   HandleCommand(socketId, message)
   {
     const parts = message.content.trim().split(/\s+/); // Split by spaces
@@ -541,6 +547,10 @@ class GameRoom {
     else if(commandName == '/restart')
     {
       this.NewRound();
+    }
+    else if(commandName == '/difficulty')
+    {
+      this.maxHintsPercent = parameters[0]; 
     }
   }
 }

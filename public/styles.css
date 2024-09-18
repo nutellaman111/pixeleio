@@ -6,6 +6,11 @@
 color: var(--userColor);
 }
 
+/*user name enter screen------------------------------*/
+.input-label {
+    margin-right: 7px;
+}
+
 /*big stuff----------------------*/
 
 body {
