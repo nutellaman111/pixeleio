@@ -57,8 +57,8 @@ class GameRoom {
 
     if(false)
     {
-      this.roundDuration = 5 * 1000;
-      this.roundEndingDuration = 3 * 1000;
+      this.roundDuration = 10 * 1000;
+      this.roundEndingDuration = 1 * 1000;
     }
     else
     {
@@ -81,9 +81,11 @@ class GameRoom {
 
   NewRound()
   {
-    if(this.word)
+    clearInterval(this.hintsInterval);
+
+    if(this.wordObject)
     {
-      this.SendMessageFromSystem('The word was ' + this.word)
+      this.SendMessageFromSystem('The word was ' + this.wordObject.revealed)
     }
 
     this.GetUsersArray().forEach(x => {
@@ -98,12 +100,16 @@ class GameRoom {
     this.gameState = "inProgress";
 
     this.EmitToUserObject('b.gameState', this.gameState)
-    this.SetTimer(() => this.RoundTimedOut(), this.roundDuration)
+    this.SetGameTimeAndEmit(() => this.RoundTimedOut(), this.roundDuration)
     this.RoundStartTime = new Date();
     this.EmitToUserObject('b.rerollUsed', this.rerollUsed);
-    this.EmitUsers()
+    this.EmitUsersToEveryone()
     this.EmitToUserObject('b.canvas', this.squares);
-    this.EmitWord();
+    this.EmitWordToEveryone();
+
+    this.hintsInterval = setInterval(() => {
+      this.UpdateHints();
+    }, 100);
   }
 
   RoundTimedOut()
@@ -113,10 +119,11 @@ class GameRoom {
 
   RoundEnd()
   {
+    clearInterval(this.hintsInterval);
     this.gameState = "roundEnding"
     this.EmitToUserObject('b.gameState',this.gameState)
-    this.EmitWord();
-    this.SetTimer(() => this.NewRound(), this.roundEndingDuration)
+    this.EmitWordToEveryone();
+    this.SetGameTimeAndEmit(() => this.NewRound(), this.roundEndingDuration)
   }
 
   //EMISSION------------------------------------------------------------------------------------------------------------------------
@@ -129,10 +136,15 @@ class GameRoom {
 
   GetTimeRemainingMS()
   {
-    return this.currentWaitDuration - (new Date() - this.currentWaitStart)
+    return this.currentWaitDuration - this.GetTimePassedMS();
   }
 
-  SetTimer(onFinish, timeToWaitMS)
+  GetTimePassedMS()
+  {
+    return new Date() - this.currentWaitStart
+  }
+
+  SetGameTimeAndEmit(onFinish, timeToWaitMS)
   {
     clearTimeout(this.timer);
     this.currentWaitStart = new Date();
@@ -162,34 +174,41 @@ class GameRoom {
       this.rerollUsed = true;
       this.SetRandomWord();
       this.ClearBoard();
-      this.EmitWord();
+      this.EmitWordToEveryone();
       this.EmitToUserObject('b.rerollUsed', this.rerollUsed);
       this.EmitToUserObject('b.canvas', this.squares);
       usersArray.forEach(x => x.reroll = false);
       this.SendMessageFromSystem("Word re-rolled")
     }
 
-    this.EmitUsers()
+    this.EmitUsersToEveryone()
   };
 
   //WORD---------------------------------------------------------------------------------------------------------------------------------------------
   SetRandomWord()
   {
-    this.word = this.dictionary.PopRandomWord();
+    this.wordObject = this.dictionary.PopRandomWord();
   }
   
-  EmitWord()
+  EmitWordToEveryone()
   {
     let usersArray = this.GetUsersArray();
 
     usersArray.forEach(user => {
         if (user.drawing || user.guessed || this.gameState !== "inProgress") {
-            EmitToUsersArray([user], 'b.word', this.word); // Emit actual word
+            EmitToUsersArray([user], 'b.word', this.wordObject.revealed); // Emit actual word
         } else {
-            let censoredWord = this.dictionary.CensorWord(this.word);
-            EmitToUsersArray([user], 'b.word', censoredWord); // Emit censored word
+            EmitToUsersArray([user], 'b.word', this.wordObject.censored); // Emit censored word
         }
     });
+  }
+
+  UpdateHints()
+  {
+    let percentage = Math.min(0.4, 0.5 * (this.GetTimePassedMS() / this.currentWaitDuration));
+    if(this.wordObject.UpdateRevealedPercentage(percentage)){
+      this.EmitWordToEveryone();
+    };
   }
 
   //BOARD------------------------------------------------------------------------------------------------------------------------------------------
@@ -297,10 +316,10 @@ class GameRoom {
     }*/
     if ((!playersArr.some(x => x.drawing)) && this.gameState == "inProgress") {
       console.log("no one drawing")
-      this.EmitUsers();
+      this.EmitUsersToEveryone();
       this.RoundEnd();
     } else {
-      this.EmitUsers();
+      this.EmitUsersToEveryone();
 
       this.DivideBoard(true);
   
@@ -311,7 +330,7 @@ class GameRoom {
 
 
 
-  EmitUsers(){
+  EmitUsersToEveryone(){
     this.EmitToUserObject('b.users', this.users)
   }
 
@@ -340,7 +359,7 @@ class GameRoom {
 
     //send the player list to the player
     this.OnPlayersChangeIncludingDrawingStatus()
-    this.EmitWord();
+    this.EmitWordToEveryone();
 
     socket.on('f.reroll', (fUser) => this.HandleReroll(socket, fUser));
     socket.on('f.squares', (fSquares) => this.HandlePaintingSquares(socket, fSquares));
@@ -400,11 +419,11 @@ class GameRoom {
           //guessing - send to everyone unless its correct or close
           else 
           {
-            if(this.dictionary.AreWordsEquivelent(fMessage.content, this.word))
+            if(this.wordObject.IsEquivelentToString(fMessage.content))
             {
               this.UserGuessedRight(currentUser);
             }
-            else if(this.dictionary.AreWordsClose(fMessage.content, this.word)){
+            else if(this.wordObject.IsCloseToString(fMessage.content)){
               this.SendMessageFromSystem(fMessage.content + " is CLOSE!", [currentUser]);
             }
             else
@@ -441,19 +460,19 @@ class GameRoom {
       }
     });
 
-    this.SendMessageFromSystem(this.word + " is CORRECT! (+" + scoreForGuesser + ")", [guesser]);
+    this.SendMessageFromSystem(this.wordObject.revealed + " is CORRECT! (+" + scoreForGuesser + ")", [guesser]);
 
-    this.EmitUsers();
+    this.EmitUsersToEveryone();
 
     console.log("filtered users = " + usersArray.filter(x=>!x.drawing && !x.guessed));
     if(!usersArray.filter(x=>!x.drawing && !x.guessed).length) //if no onbe is still guessing
     {
-      console.log("MEOW");
       this.RoundEnd();
     }
     else
     {
-      EmitToUsersArray([guesser],'b.word', this.word)
+      //reveal the word to the user who got it right
+      EmitToUsersArray([guesser],'b.word', this.wordObject.revealed)
     }
 
   }

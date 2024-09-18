@@ -42,6 +42,7 @@ body {
     font-size: 2.5em; /* Adjust title size */
     display: inline-block; /* Prevent full width occupation */
     margin: 20px;
+    white-space: pre; /*dont collapse multiple spaces*/
   }
 
 .checkbox-block {

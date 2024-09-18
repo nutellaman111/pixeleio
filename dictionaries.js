@@ -39,34 +39,25 @@ class dictionary
         }
     
         // Get a random index
-        const randomIndex = Math.floor(Math.random() * this.words.length);
+        const randomIndex = 926//Math.floor(Math.random() * this.words.length);
     
         // Remove the word at the random index and store it in removedWords
         const word = this.words.splice(randomIndex, 1)[0];
         this.removedWords.push(word);
     
-        return word;
-    }
-
-    CensorWord(word)
-    {
-        return word
-        .replace('-',' ')
-        .split('')
-        .map(char => (this.allowedSymbols).includes(char) ? '_ ' : '')
-        .join('');
+        return new WordObject( word, this);
     }
 
     AreWordsEquivelent(originalWord1, originalWord2) {
-        const word1 = this.StandardiseWord(originalWord1)
-        const word2 = this.StandardiseWord(originalWord2)
+        const word1 = this.StandardiseWordForComparing(originalWord1)
+        const word2 = this.StandardiseWordForComparing(originalWord2)
         return word1 == word2;
     }
 
     AreWordsClose(originalWord1, originalWord2) {
 
-        const word1 = this.StandardiseWord(originalWord1)
-        const word2 = this.StandardiseWord(originalWord2)
+        const word1 = this.StandardiseWordForComparing(originalWord1)
+        const word2 = this.StandardiseWordForComparing(originalWord2)
 
         const len1 = word1.length;
         const len2 = word2.length;
@@ -107,7 +98,7 @@ class dictionary
         return true;
     }
 
-    StandardiseWord(str) {
+    StandardiseWordForComparing(str) {
         if (!str) return '';
 
         // Convert to lowercase
@@ -119,6 +110,64 @@ class dictionary
             .join('')
     }
 
+}
+
+class WordObject
+{
+    constructor(word, dictionary){
+        this.dictionary = dictionary;
+        this.revealed = word;
+        this.wordForGuessers = word //only allowed symbols and spaces
+            .replace('-',' ')
+            .split('')
+            .map(char => (this.dictionary.allowedSymbols + " ").includes(char) ? char : '')
+            .join('');
+        this.revealedPercentage = 0;
+
+        // Get indices of wordForGuessers and shuffle them randomly
+        this.revealOrder = [...Array(this.wordForGuessers.length).keys()]
+            .filter(index => this.wordForGuessers[index] !== ' ')  // Filter out the indexes where the character is a space
+            .sort(() => Math.random() - 0.5);  // Shuffle the filtered indexes
+
+        console.log("reveal order" + this.revealOrder)
+
+        // Initially no letters are revealed
+        this.UpdateCensoredWord();
+    }
+
+    // returns whether there was a change
+    UpdateCensoredWord() {
+        const revealCount = Math.floor(this.revealedPercentage * this.wordForGuessers.length);
+        let revealedIndices = this.revealOrder.slice(0, revealCount);
+        
+        let temp = this.censored;
+        this.censored = 
+            this.wordForGuessers
+            .split('')
+            .map((char, index) => {
+                if (char === ' ') {
+                    return ' '; // keep spaces unchanged
+                }
+                return revealedIndices.includes(index) ? char : '_'; // reveal or censor letters
+            })
+            .join(' '); // add spaces after each character (including spaces)
+        return temp == this.censored;
+    }
+
+    // returns whether there was a change
+    UpdateRevealedPercentage(newPercentage) {
+        this.revealedPercentage = newPercentage;
+        return this.UpdateCensoredWord();
+    }
+
+    IsEquivelentToString(str)
+    {
+        return this.dictionary.AreWordsEquivelent(this.revealed, str);
+    }
+    IsCloseToString(str)
+    {
+        return this.dictionary.AreWordsClose(this.revealed, str);
+    }
 }
 
 module.exports = { GetDictionary };
