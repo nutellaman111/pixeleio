@@ -285,12 +285,7 @@ body {
 }
 
 /* Styles for messages without an author */
-.message.message-no-author {
-    color: black;
-    text-align: center;
-    align-items: center;
-    background-color: #ffffff00;
-}
+
 
 .message {
     margin-bottom: 5px;
@@ -299,6 +294,16 @@ body {
     background-color: #ffffff;
     overflow-wrap: break-word; /* Ensure long words wrap */
     vertical-align: middle; /* Ensures the icon aligns with text */
+    color: black;
+}
+
+.message.authorless {
+    background-color: #ffffff00;
+}
+
+.message.system {
+    text-align: center;
+    align-items: center;
 }
 
 button { /*send button*/
@@ -400,6 +405,7 @@ button { /*send button*/
     transition: opacity 1s cubic-bezier(0.5, 0, 1, 0.5), transform 1s cubic-bezier(0, 0.5, 0.5, 1);
     transform: translateY(0);
     z-index: 99999; 
+    pointer-events: none;
 }
 
 .notification.fade-out {

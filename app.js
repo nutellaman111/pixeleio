@@ -65,7 +65,7 @@ class GameRoom {
     else
     {
       this.roundDuration = 140 * 1000;
-      this.roundEndingDuration = 5 * 1000;
+      this.roundEndingDuration = 6 * 1000;
     }
 
     
@@ -87,7 +87,11 @@ class GameRoom {
 
     if(this.wordObject)
     {
-      this.SendMessageFromSystem('The word was ' + this.wordObject.revealed)
+      let message = {
+        content: 'The word was ' + this.wordObject.revealed,
+        system: true
+      }
+      this.SendMessage(message)
     }
 
     this.GetUsersArray().forEach(x => {
@@ -173,6 +177,7 @@ class GameRoom {
     let usersArray = this.GetUsersArray();
     if(usersArray.filter(x => x.drawing && x.reroll).length >= Math.ceil(usersArray.filter(x => x.drawing).length * 0.75))
     {
+      let oldWord = this.wordObject;
       this.rerollUsed = true;
       this.SetRandomWord();
       this.ClearBoard();
@@ -180,7 +185,11 @@ class GameRoom {
       this.EmitToUserObject('b.rerollUsed', this.rerollUsed);
       this.EmitToUserObject('b.canvas', this.squares);
       usersArray.forEach(x => x.reroll = false);
-      this.SendMessageFromSystem("Word re-rolled")
+      let message = {
+        content: '"' + oldWord.revealed + '" was re-rolled',
+        system: true
+      }
+      this.SendMessage(message)
     }
 
     this.EmitUsersToEveryone()
@@ -377,8 +386,11 @@ class GameRoom {
   {
     if(this.users[socket.id])
       {
-
-        this.SendMessageFromSystem(this.users[socket.id].name + " has left")
+        let message = {
+          content: this.users[socket.id].name + " has left",
+          system: true
+        }
+        this.SendMessage(message)
     
         delete this.users[socket.id];
 
@@ -393,6 +405,8 @@ class GameRoom {
   HandleMessage(socket, fMessage)
   {
     let currentUser = this.users[socket.id]; 
+    fMessage.authorId = socket.id;
+    fMessage.system = false;
 
     if(fMessage.content[0]=='/')
     {
@@ -426,7 +440,11 @@ class GameRoom {
               this.UserGuessedRight(currentUser);
             }
             else if(this.wordObject.IsCloseToString(fMessage.content)){
-              this.SendMessageFromSystem(fMessage.content + " is CLOSE!", [currentUser]);
+              let message = {
+                content: fMessage.content + " is CLOSE!",
+                system: true
+              }
+              this.SendMessage(message, [currentUser]);
             }
             else
             {
@@ -462,7 +480,18 @@ class GameRoom {
       }
     });
 
-    this.SendMessageFromSystem(this.wordObject.revealed + " is CORRECT! (+" + scoreForGuesser + ")", [guesser]);
+    let message = {
+      content: this.wordObject.revealed + " is CORRECT! (+" + scoreForGuesser + ")",
+      system: true
+    }
+    this.SendMessage(message, [guesser]);
+    message = {
+      content: guesser.name + " guessed it!",
+      system: true,
+      authorId: guesser.id
+    }
+    this.SendMessage(message, this.GetUsersArray().filter(x=>x.id != guesser.id));
+
 
     this.EmitUsersToEveryone();
 
@@ -479,11 +508,8 @@ class GameRoom {
 
   }
 
-  SendMessageFromSystem(content, usersArr)
+  SendMessage(message, usersArr)
   {
-    const message = {
-      content: content
-    }
     if(usersArr)
     {
       EmitToUsersArray(usersArr, 'b.message', message)

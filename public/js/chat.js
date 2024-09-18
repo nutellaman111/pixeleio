@@ -31,13 +31,24 @@ function sendMessage() {
 
 // Function to display a message
 function DisplayMessage(message) {
+
+    console.log("message " + message.authorId + " " + message.system + " " + message.content);
+
     let author = users[message.authorId];
 
     const messageElement = document.createElement('div');
     messageElement.classList.add('message');
 
-    
-    if (author) {
+
+    if(!author){
+        messageElement.classList.add('authorless');
+    }
+    if(message.system){
+        messageElement.classList.add('system');
+    }
+
+    if(!message.system && author)
+    {
         //icon
         const playerIcon = StateIconOfPlayer(author);
         playerIcon.classList.add('message-icon');
@@ -46,24 +57,27 @@ function DisplayMessage(message) {
         const authorName = document.createElement('strong');
         authorName.textContent = `${author.name}: `;
         authorName.classList.add('author-name');
-    
-        //content
-        const messageContent = document.createElement('span');
-        messageContent.textContent = message.content;
-    
-        // append all
-        messageElement.style.color = author.color;
+
         messageElement.appendChild(playerIcon);
         messageElement.appendChild(authorName);
-        messageElement.appendChild(messageContent);
-    } else {
-        //content
+    }
+
+    if(message.system)
+    {
         const messageContent = document.createElement('strong');
         messageContent.textContent = message.content;
-    
-        //append all
-        messageElement.classList.add('message-no-author');
         messageElement.appendChild(messageContent);
+    }
+    else
+    {
+        const messageContent = document.createElement('span');
+        messageContent.textContent = message.content;
+        messageElement.appendChild(messageContent);
+    }
+
+    if(author)
+    {
+        messageElement.style.color = author.color;
     }
     
     messagesContainer.appendChild(messageElement);
