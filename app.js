@@ -105,12 +105,12 @@ class GameRoom {
     this.rerollUsed = false;
     this.gameState = "inProgress";
 
-    this.EmitToUserObject('b.gameState', this.gameState)
+    this.EmitToEveryone('b.gameState', this.gameState)
     this.SetGameTimeAndEmit(() => this.RoundTimedOut(), this.roundDuration)
     this.RoundStartTime = new Date();
-    this.EmitToUserObject('b.rerollUsed', this.rerollUsed);
+    this.EmitToEveryone('b.rerollValue', this.rerollUsed);
     this.EmitUsersToEveryone()
-    this.EmitToUserObject('b.canvas', this.squares);
+    this.EmitToEveryone('b.canvas', this.squares);
     this.EmitWordToEveryone();
 
     this.hintsInterval = setInterval(() => {
@@ -127,13 +127,13 @@ class GameRoom {
   {
     clearInterval(this.hintsInterval);
     this.gameState = "roundEnding"
-    this.EmitToUserObject('b.gameState',this.gameState)
+    this.EmitToEveryone('b.gameState',this.gameState)
     this.EmitWordToEveryone();
     this.SetGameTimeAndEmit(() => this.NewRound(), this.roundEndingDuration)
   }
 
   //EMISSION------------------------------------------------------------------------------------------------------------------------
-  EmitToUserObject(eventName, eventData)
+  EmitToEveryone(eventName, eventData)
   {
     EmitToUsersArray(this.GetUsersArray(), eventName, eventData);
   }
@@ -156,7 +156,7 @@ class GameRoom {
     this.currentWaitStart = new Date();
     this.currentWaitDuration = timeToWaitMS;
     this.timer = setTimeout(onFinish, timeToWaitMS);
-    this.EmitToUserObject('b.time', this.GetTimeRemainingMS());
+    this.EmitToEveryone('b.time', this.GetTimeRemainingMS());
   }
 
 
@@ -177,13 +177,16 @@ class GameRoom {
     let usersArray = this.GetUsersArray();
     if(usersArray.filter(x => x.drawing && x.reroll).length >= Math.ceil(usersArray.filter(x => x.drawing).length * 0.75))
     {
+      //activate reroll
+
       let oldWord = this.wordObject;
       this.rerollUsed = true;
       this.SetRandomWord();
       this.ClearBoard();
       this.EmitWordToEveryone();
-      this.EmitToUserObject('b.rerollUsed', this.rerollUsed);
-      this.EmitToUserObject('b.canvas', this.squares);
+      this.EmitToEveryone('b.rerollValue', this.rerollUsed);
+      this.EmitToEveryone('b.reroll', null);
+      this.EmitToEveryone('b.canvas', this.squares);
       usersArray.forEach(x => x.reroll = false);
       let message = {
         content: '"' + oldWord.revealed + '" was re-rolled',
@@ -264,7 +267,7 @@ class GameRoom {
   
     // Emit accepted squares as an array
     if (acceptedSquares.length > 0) {
-      this.EmitToUserObject('b.squares', acceptedSquares);
+      this.EmitToEveryone('b.squares', acceptedSquares);
     }
   
     // Emit rejected squares as an array
@@ -334,7 +337,7 @@ class GameRoom {
 
       this.DivideBoard(true);
   
-      this.EmitToUserObject('b.canvas-ownership', this.squares)
+      this.EmitToEveryone('b.canvas-ownership', this.squares)
     }
 
   }
@@ -342,7 +345,7 @@ class GameRoom {
 
 
   EmitUsersToEveryone(){
-    this.EmitToUserObject('b.users', this.users)
+    this.EmitToEveryone('b.users', this.users)
   }
 
   //INDIVIDUAL PLAYER------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -366,7 +369,7 @@ class GameRoom {
     socket.emit('b.gameState', this.gameState)
     socket.emit('b.canvas', this.squares);
     socket.emit('b.time', this.GetTimeRemainingMS());
-    socket.emit('b.rerollUsed', this.rerollUsed);
+    socket.emit('b.rerollValue', this.rerollUsed);
 
     //send the player list to the player
     this.OnPlayersChangeIncludingDrawingStatus()
@@ -448,13 +451,13 @@ class GameRoom {
             }
             else
             {
-              this.EmitToUserObject('b.message', fMessage)
+              this.EmitToEveryone('b.message', fMessage)
             }
           }
       }
       else
       {
-        this.EmitToUserObject('b.message', fMessage)
+        this.EmitToEveryone('b.message', fMessage)
       }
     }
   }
@@ -494,6 +497,7 @@ class GameRoom {
 
 
     this.EmitUsersToEveryone();
+    this.EmitToEveryone('b.guessed', null)
 
     console.log("filtered users = " + usersArray.filter(x=>!x.drawing && !x.guessed));
     if(!usersArray.filter(x=>!x.drawing && !x.guessed).length) //if no onbe is still guessing
@@ -516,7 +520,7 @@ class GameRoom {
     }
     else
     {
-      this.EmitToUserObject('b.message', message)
+      this.EmitToEveryone('b.message', message)
     }
   }
 
@@ -539,7 +543,7 @@ class GameRoom {
     {
       this.users[socketId].guessed = false;
       this.users[socketId].drawing = true;
-      this.EmitToUserObject(this.users[socketId], 'b.rerollUsed', this.rerollUsed)
+      this.EmitToEveryone(this.users[socketId], 'b.rerollValue', this.rerollUsed)
       this.OnPlayersChangeIncludingDrawingStatus();
     }
     if(commandName == '/guess')
@@ -564,7 +568,7 @@ class GameRoom {
       this.gridHeight = parameters[1] || this.gridWidth;
       this.CreateBoard();
       this.DivideBoard(true);
-      this.EmitToUserObject('b.canvas', this.squares)
+      this.EmitToEveryone('b.canvas', this.squares)
     }
     else if(commandName == '/end')
     {

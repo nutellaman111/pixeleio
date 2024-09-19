@@ -10,14 +10,14 @@ rerollCheckbox.addEventListener('change', () => {
 });
 
 let rerollUsed = false;
-function UpdateRerollUsed(bRerollUsed)
+function UpdateRerollValue(bRerollUsed)
 {
     rerollUsed = bRerollUsed;
-    if(rerollUsed)
-    {
-        showNotification("Word Re-rolled");
-        console.log("showing notification");
-    }
+}
+
+function ShowRerollNotification()
+{
+    showNotification("Word Re-rolled");
 }
 
 function UpdateRerollBlock()

@@ -183,7 +183,7 @@ body {
 
 .hold-button:active::before {
     height: 100%;
-    transition: height 1s cubic-bezier(0,1.06,1,.69); /* Fast start, slow end */
+    transition: height 0.75s cubic-bezier(0,1.06,1,.69); /* Fast start, slow end */
 }
 
 .hold-button span {
@@ -392,6 +392,7 @@ button { /*send button*/
     background-color: #00a2e8;*/
     z-index: 9999; 
     transform: translate(50%, 50%); /* Centers the container */
+    pointer-events: none;
 }
 
 .notification {

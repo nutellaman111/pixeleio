@@ -14,7 +14,7 @@ let eventFunctions = [
     },{
         functionToCall: UpdateLanguageDirection,
         activators: ["b.languageDirection"],
-        dependencies: [],
+        dependencies: ["b.languageDirection"],
         dataFrom: "b.languageDirection",
         priority: 10
     },{
@@ -24,20 +24,25 @@ let eventFunctions = [
         priority: 0
     },{
         functionToCall: UpdateRerollBlock,
-        activators: ["b.gameState","b.rerollUsed","b.users"],
-        dependencies: ["b.gameState","b.rerollUsed","b.users"],
+        activators: ["b.gameState","b.rerollValue","b.users"],
+        dependencies: ["b.gameState","b.rerollValue","b.users"],
+        priority: 0
+    },{
+        functionToCall: UpdateRerollValue,
+        activators: ["b.rerollValue"],
+        dependencies: ["b.rerollValue"],
+        dataFrom: 'b.rerollValue',
+        priority: 10
+    },{
+        functionToCall: ShowRerollNotification,
+        activators: ["b.reroll"],
+        dependencies: ["b.reroll"],
         priority: 0
     },{
         functionToCall: UpdateGameState,
         activators: ["b.gameState"],
         dependencies: ["b.gameState"],
         dataFrom: 'b.gameState',
-        priority: 10
-    },{
-        functionToCall: UpdateRerollUsed,
-        activators: ["b.rerollUsed"],
-        dependencies: ["b.rerollUsed"],
-        dataFrom: 'b.rerollUsed',
         priority: 10
     },{
         functionToCall: DisplayMessage,
@@ -85,6 +90,11 @@ let eventFunctions = [
         activators: ["b.squares"],
         dependencies: ["b.users", "b.canvas"],
         dataFrom: "b.squares",
+        priority: 0
+    },{
+        functionToCall: PlayDing,
+        activators: ["b.guessed"],
+        dependencies: ["b.gameState", "b.guessed"],
         priority: 0
     },
 ];

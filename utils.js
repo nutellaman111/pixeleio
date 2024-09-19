@@ -7,9 +7,7 @@ function DivideSquaresToPeople(squares, users, maintainOrder) {
 
 
   users.forEach(user => {
-    console.log("before " + user.boardOwnershipOrder);
     user.boardOwnershipOrder = (user.boardOwnershipOrder && maintainOrder)? user.boardOwnershipOrder : Math.random();
-    console.log("after " + user.boardOwnershipOrder);
   });
   users.sort((a,b) => a.boardOwnershipOrder-b.boardOwnershipOrder);
 
@@ -18,8 +16,7 @@ function DivideSquaresToPeople(squares, users, maintainOrder) {
   users.forEach(user => {
     user.x = (packing[users.length][i].x) * (width);
     user.y = (packing[users.length][i].y) * (height);
-    console.log(user.x);
-    console.log(user.y);
+
     i = i+1;
   });
 
@@ -44,7 +41,6 @@ function DivideSquaresToPeople(squares, users, maintainOrder) {
           nearestUsers = [user]; // Start a new list with the current userId
         } else if (Math.abs(distance - minDistance) < DISTANCE_THRESHOLD) {
           nearestUsers.push(user); // Add to the list of nearest users
-          console.log("tie!");
         }
       });
       

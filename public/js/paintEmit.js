@@ -9,7 +9,7 @@ const clearButton = document.getElementById('clear');
 
 // Timer and delay variables
 let holdTimer;
-const holdDuration = 1000; // 1 second
+const holdDuration = 0.75 * 1000; // 0.75 second
 
 // Function to handle the button hold 
 function heldFor1Second() {
@@ -40,8 +40,9 @@ clearButton.onpointerup = clearHoldTimer;
 const bucketCheckbox = document.getElementById('bucket');
 
 bucketCheckbox.addEventListener('change', (event) => {
-    bucketSelected = event.target.checked;
-    RenderBoard();
+  PlayMetal();
+  bucketSelected = event.target.checked;
+  RenderBoard();
 });
 
 //mouse----------------------------------------------------------------
@@ -115,13 +116,17 @@ bucketCheckbox.addEventListener('change', (event) => {
       {
         return;
       }
+
+
   
       if(bucketSelected)
       {
+        PlayBucket();
         socket.emit('f.squares', bucketFill(square.x, square.y, selectedColor));
       }
       else
       {
+        PlayTap();
         square.color = selectedColor;
         RenderSquare(square)
         socket.emit('f.squares', [square]);

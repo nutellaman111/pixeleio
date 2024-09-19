@@ -75,9 +75,17 @@ function DisplayMessage(message) {
         messageElement.appendChild(messageContent);
     }
 
-    if(author)
+
+    if(!message.system && author)
     {
         messageElement.style.color = author.color;
+    }
+
+    if(message.system && author)
+    {
+        //border
+        messageElement.style.backgroundColor = author.color;
+        messageElement.style.color = 'white';
     }
     
     messagesContainer.appendChild(messageElement);
