@@ -73,13 +73,45 @@ class GameRoom {
     this.rerollUsed = false;
     this.gameState = "waitingForPlayers";
 
-    this.NewRound();
+    this.WaitForPlayers();
     this.PlayerConnected(creatorSocket, fUser);
-    this.NewRound();
+    //this.NewRound();
 
     this.currentWaitStart;
     this.currentWaitDuration;
   }
+
+  WaitForPlayers()
+  {
+    clearInterval(this.hintsInterval);
+    this.SetGameTimeAndEmit(() => {}, 0);
+
+    if(this.wordObject)
+    {
+      let message = {
+        content: 'The word was ' + this.wordObject.revealed,
+        system: true
+      }
+      this.SendMessage(message)
+    }
+
+    this.GetUsersArray().forEach(x => {
+      x.reroll = false;
+      x.guessed = false;
+      x.drawing = true;
+    })
+    this.CreateBoard();
+
+    //this.DivideBoard(false);
+
+    this.rerollUsed = false;
+    this.gameState = "waitingForPlayers"
+    this.EmitToEveryone('b.gameState', this.gameState)
+    this.EmitUsersToEveryone()
+    this.EmitToEveryone('b.canvas', this.squares);
+
+  }
+
 
   NewRound()
   {
@@ -165,13 +197,15 @@ class GameRoom {
 
   HandleReroll(socket, fUser)
   {
-    let user = this.users[socket.id];
 
     if(this.gameState != "inProgress")
-    {
-      socket.emit('b.users',this.users);
-      return;
-    }
+      {
+        socket.emit('b.users',this.users);
+        return;
+      }
+
+    let user = this.users[socket.id];
+
     user.reroll = fUser.reroll;
 
     let usersArray = this.GetUsersArray();
@@ -219,10 +253,15 @@ class GameRoom {
 
   UpdateHints()
   {
-    let percentage = Math.min(this.maxHintsPercent, 1.25 * this.maxHintsPercent * (this.GetTimePassedMS() / this.currentWaitDuration));
-    if(this.wordObject.UpdateRevealedPercentage(percentage)){
-      this.EmitWordToEveryone();
-    };
+    try {
+
+      let percentage = Math.min(this.maxHintsPercent, 1.25 * this.maxHintsPercent * (this.GetTimePassedMS() / this.currentWaitDuration));
+      if(this.wordObject.UpdateRevealedPercentage(percentage)){
+        this.EmitWordToEveryone();
+      };
+
+    } catch (error) {console.error(error)}
+
   }
 
   //BOARD------------------------------------------------------------------------------------------------------------------------------------------
@@ -250,30 +289,47 @@ class GameRoom {
   }
 
   HandlePaintingSquares(socket, fSquares) {
-    let acceptedSquares = [];
-    let rejectedSquares = [];
-  
-    fSquares.forEach(fSquare => {
-      console.log(fSquare.x + " " + fSquare.y);
-      let square = this.squares[fSquare.x][fSquare.y];
-      if ((this.gameState === "inProgress" || this.gameState === "waitingForPlayers") &&
-          square.ownerId === socket.id && this.users[socket.id].drawing) {
-        square.color = fSquare.color;
-        acceptedSquares.push(square);
-      } else {
-        rejectedSquares.push(square);
+    try {
+
+      let acceptedSquares = [];
+      let rejectedSquares = [];
+    
+      fSquares.forEach(fSquare => {
+
+        let square = this.squares[fSquare.x][fSquare.y];
+
+        if (
+              (
+                this.gameState === "waitingForPlayers"
+                ||
+                (
+                  square.ownerId === socket.id
+                  && 
+                  this.gameState === "inProgress"
+                ) 
+              ) 
+              &&
+              this.users[socket.id].drawing
+            )
+        {
+          square.color = fSquare.color;
+          acceptedSquares.push(square);
+        } else {
+          rejectedSquares.push(square);
+        }
+
+      });
+    
+      // Emit accepted squares as an array
+      if (acceptedSquares.length > 0) {
+        this.EmitToEveryone('b.squares', acceptedSquares);
       }
-    });
-  
-    // Emit accepted squares as an array
-    if (acceptedSquares.length > 0) {
-      this.EmitToEveryone('b.squares', acceptedSquares);
-    }
-  
-    // Emit rejected squares as an array
-    if (rejectedSquares.length > 0) {
-      socket.emit('b.squares', rejectedSquares);
-    }
+    
+      // Emit rejected squares as an array
+      if (rejectedSquares.length > 0) {
+        socket.emit('b.squares', rejectedSquares);
+      }
+    } catch (error) {console.error(error)}
   }
   
   //PLAYERS---------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -324,25 +380,24 @@ class GameRoom {
   OnPlayersChangeIncludingDrawingStatus()
   {
     let playersArr = this.GetUsersArray();
-    /*if(!playersArr.length)
-    {
-      //delete this.gameRooms[this.roomCode];
-    }*/
-    if ((!playersArr.some(x => x.drawing)) && this.gameState == "inProgress") {
-      console.log("no one drawing")
-      this.EmitUsersToEveryone();
-      this.RoundEnd();
-    } else {
-      this.EmitUsersToEveryone();
 
-      this.DivideBoard(true);
+    this.EmitUsersToEveryone();
+
+    if(this.gameState == "inProgress")
+    {
+      if (!playersArr.some(x => x.drawing)) {
+
+        this.RoundEnd();
   
-      this.EmitToEveryone('b.canvas-ownership', this.squares)
+      } else {
+  
+        this.DivideBoard(true);
+        this.EmitToEveryone('b.canvas-ownership', this.squares)
+      }
     }
 
+
   }
-
-
 
   EmitUsersToEveryone(){
     this.EmitToEveryone('b.users', this.users)
@@ -351,55 +406,64 @@ class GameRoom {
   //INDIVIDUAL PLAYER------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   PlayerConnected(socket, fUser)
   {
-    this.users[socket.id] = {
-        id: socket.id,
-        name: fUser.name,
-        color: fUser.color,
-        drawing: this.gameState == "waitingForPlayers",
-        guessed: false,
-        timesDrawing: 0,
-        x: 0,
-        y: 0,
-        reroll: false,
-        score: 0
-    };
+    try {
+      this.users[socket.id] = {
+          id: socket.id,
+          name: fUser.name,
+          color: fUser.color,
+          drawing: this.gameState == "waitingForPlayers",
+          guessed: false,
+          timesDrawing: 0,
+          x: 0,
+          y: 0,
+          reroll: false,
+          score: 0
+      };
 
-    socket.emit('b.languageDirection', this.dictionary.languageDirection)
-    socket.emit('b.users', this.users)
-    socket.emit('b.gameState', this.gameState)
-    socket.emit('b.canvas', this.squares);
-    socket.emit('b.time', this.GetTimeRemainingMS());
-    socket.emit('b.rerollValue', this.rerollUsed);
+      socket.emit('b.languageDirection', this.dictionary.languageDirection)
+      socket.emit('b.users', this.users)
+      socket.emit('b.gameState', this.gameState)
+      socket.emit('b.canvas', this.squares);
+      socket.emit('b.time', this.GetTimeRemainingMS());
+      socket.emit('b.rerollValue', this.rerollUsed);
 
-    //send the player list to the player
-    this.OnPlayersChangeIncludingDrawingStatus()
-    this.EmitWordToEveryone();
+      //send the player list to the player
+      this.OnPlayersChangeIncludingDrawingStatus()
+      if(this.gameState == "inProgress")
+      {
+        this.EmitWordToEveryone();
+      }
 
-    socket.on('f.reroll', (fUser) => this.HandleReroll(socket, fUser));
-    socket.on('f.squares', (fSquares) => this.HandlePaintingSquares(socket, fSquares));
-    socket.on('f.message', (fMessage) => this.HandleMessage(socket, fMessage));
-  
-    socket.on('disconnect', (reason) => {
-      this.HandleDisconnect(socket, reason)
+      socket.on('f.reroll', (fUser) => this.HandleReroll(socket, fUser));
+      socket.on('f.squares', (fSquares) => this.HandlePaintingSquares(socket, fSquares));
+      socket.on('f.message', (fMessage) => this.HandleMessage(socket, fMessage));
+    
+      socket.on('disconnect', (reason) => {
+        this.HandleDisconnect(socket, reason)
 
-    })
+      })
+    } catch (error) {console.error(error)}
+
   }
 
   HandleDisconnect(socket, reason)
   {
-    if(this.users[socket.id])
-      {
-        let message = {
-          content: this.users[socket.id].name + " has left",
-          system: true
-        }
-        this.SendMessage(message)
-    
-        delete this.users[socket.id];
+    try {
+      if(this.users[socket.id])
+        {
+          let message = {
+            content: this.users[socket.id].name + " has left",
+            system: true
+          }
+          this.SendMessage(message)
+      
+          delete this.users[socket.id];
 
-    
-        this.OnPlayersChangeIncludingDrawingStatus();
-      }
+      
+          this.OnPlayersChangeIncludingDrawingStatus();
+        }
+    } catch (error) {console.error(error)}
+  
   }
 
 
@@ -407,59 +471,61 @@ class GameRoom {
 
   HandleMessage(socket, fMessage)
   {
-    let currentUser = this.users[socket.id]; 
-    fMessage.authorId = socket.id;
-    fMessage.system = false;
-
-    if(fMessage.content[0]=='/')
-    {
-      this.HandleCommand(socket.id, fMessage);
-    }
-    else
-    {
-      let sendTo;
-
-      if(this.gameState == "inProgress")
-      {
-        //drawing - send to people who guessed
-        if(currentUser.drawing)
+    try {
+          let currentUser = this.users[socket.id]; 
+          fMessage.authorId = socket.id;
+          fMessage.system = false;
+      
+          if(fMessage.content[0]=='/')
           {
-            sendTo = this.GetUsersArray().filter(x => x.guessed || x.id == socket.id)
-            EmitToUsersArray(sendTo, 'b.message', fMessage)
+            this.HandleCommand(socket.id, fMessage);
           }
-    
-          //guessed - send to people who guessed or are drawing
-          else if(currentUser.guessed)
+          else
           {
-            sendTo = this.GetUsersArray().filter(x => x.guessed || x.drawing)
-            EmitToUsersArray(sendTo, 'b.message', fMessage)
-          }
-    
-          //guessing - send to everyone unless its correct or close
-          else 
-          {
-            if(this.wordObject.IsEquivelentToString(fMessage.content))
+            let sendTo;
+      
+            if(this.gameState == "inProgress")
             {
-              this.UserGuessedRight(currentUser);
-            }
-            else if(this.wordObject.IsCloseToString(fMessage.content)){
-              let message = {
-                content: fMessage.content + " is CLOSE!",
-                system: true
-              }
-              this.SendMessage(message, [currentUser]);
+              //drawing - send to people who guessed
+              if(currentUser.drawing)
+                {
+                  sendTo = this.GetUsersArray().filter(x => x.guessed || x.id == socket.id)
+                  EmitToUsersArray(sendTo, 'b.message', fMessage)
+                }
+          
+                //guessed - send to people who guessed or are drawing
+                else if(currentUser.guessed)
+                {
+                  sendTo = this.GetUsersArray().filter(x => x.guessed || x.drawing)
+                  EmitToUsersArray(sendTo, 'b.message', fMessage)
+                }
+          
+                //guessing - send to everyone unless its correct or close
+                else 
+                {
+                  if(this.wordObject.IsEquivelentToString(fMessage.content))
+                  {
+                    this.UserGuessedRight(currentUser);
+                  }
+                  else if(this.wordObject.IsCloseToString(fMessage.content)){
+                    let message = {
+                      content: fMessage.content + " is CLOSE!",
+                      system: true
+                    }
+                    this.SendMessage(message, [currentUser]);
+                  }
+                  else
+                  {
+                    this.EmitToEveryone('b.message', fMessage)
+                  }
+                }
             }
             else
             {
               this.EmitToEveryone('b.message', fMessage)
             }
           }
-      }
-      else
-      {
-        this.EmitToEveryone('b.message', fMessage)
-      }
-    }
+    } catch (error) {console.error(error)}
   }
 
   UserGuessedRight(guesser)

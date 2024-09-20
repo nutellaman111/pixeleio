@@ -36,6 +36,7 @@ function createColorButtons() {
 }
 
 function SelectColorByButton(button) {
+  
   // Remove 'data-selected="true"' from all color buttons
   document.querySelectorAll('.color-button').forEach(btn => btn.dataset.selected = 'false');
   
@@ -45,6 +46,8 @@ function SelectColorByButton(button) {
   // Update the selected color
   selectedColor = button.hexColor;
   console.log(selectedColor);
+
+  PlayPlop();
 }
 
 function selectColorByHex(inputHex) {

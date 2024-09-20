@@ -26,6 +26,7 @@ function CreateCanvas(bSquares)
     }
   }
 }
+
 function UpdateCanvasOwnership(bSquares)
 {
   let width = bSquares.length;
@@ -134,5 +135,11 @@ function RenderSquare(square) {
   element.style.borderBottom = borderBottom;
   element.style.borderLeft = borderLeft;
 
-  element.style.cursor = ((square.ownerId == socket.id) && IsDrawableGameState()) ? (bucketSelected? 'pointer' : 'crosshair' ) : 'no-drop';
+  element.style.cursor = 
+  IsAllowedToPaintSquare(square) ? (bucketSelected? 'pointer' : 'crosshair' ) : 'no-drop';
+}
+
+function IsAllowedToPaintSquare(square)
+{
+  return (gameState == "waitingForPlayers" || (square.ownerId == socket.id && gameState == "inProgress"));
 }

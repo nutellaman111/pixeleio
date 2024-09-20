@@ -22,12 +22,14 @@ function heldFor1Second() {
 function startHoldTimer() {
   console.log("hold start")
   holdTimer = setTimeout(heldFor1Second, holdDuration);
+  PlayYippie();
 }
 
 // Function to clear the timer
 function clearHoldTimer() {
   console.log("hold stop")
   clearTimeout(holdTimer);
+  CutYippie();
 }
 
 // Event listeners for the button
@@ -44,6 +46,12 @@ bucketCheckbox.addEventListener('change', (event) => {
   bucketSelected = event.target.checked;
   RenderBoard();
 });
+
+function DeselectBucket()
+{
+  bucketSelected = false;
+  bucketCheckbox.checked = false;
+}
 
 //mouse----------------------------------------------------------------
   const mouse = {
@@ -107,7 +115,7 @@ bucketCheckbox.addEventListener('change', (event) => {
         return;
       }
 
-      if(square.ownerId != socket.id) //return if the square isnt owned by this user
+      if(!IsAllowedToPaintSquare(square)) //return if the square isnt owned by this user
       {
         return;
       }
@@ -118,11 +126,12 @@ bucketCheckbox.addEventListener('change', (event) => {
       }
 
 
-  
       if(bucketSelected)
       {
         PlayBucket();
+        DeselectBucket();
         socket.emit('f.squares', bucketFill(square.x, square.y, selectedColor));
+        RenderBoard();
       }
       else
       {
@@ -159,7 +168,7 @@ bucketCheckbox.addEventListener('change', (event) => {
       if (x < 0 || x >= squares.length || y < 0 || y >= squares[0].length) continue;
       const currentSquare = squares[x][y];
   
-      if (currentSquare.color !== oldColor || currentSquare.ownerId !== socket.id) continue;
+      if (currentSquare.color !== oldColor || !IsAllowedToPaintSquare(currentSquare)) continue;
   
       currentSquare.color = newColor;
       changedSquares.push(currentSquare);
@@ -176,12 +185,13 @@ bucketCheckbox.addEventListener('change', (event) => {
 
   function ClearAll()
   {
-    let ownedSquares = squares.flat().filter(x => x.ownerId == socket.id && x.color != "#ffffff");
-    ownedSquares.forEach(square => {
+    let ownedColoredSquares = squares.flat().filter(x => IsAllowedToPaintSquare(x) && x.color != "#ffffff");
+    ownedColoredSquares.forEach(square => {
       square.color = "#ffffff";
       RenderSquare(square)
     });
-    socket.emit('f.squares', ownedSquares);
+    socket.emit('f.squares', ownedColoredSquares);
   }
   
 }
+

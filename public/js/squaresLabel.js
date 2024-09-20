@@ -3,7 +3,7 @@
 
     grid.addEventListener('mousemove', (e) => {
         let square = SquareFromDiv(e.target) //return if not on a square
-        if(square == null || square.ownerId == socket.id)
+        if(square == null || IsAllowedToPaintSquare())
         {
             hoverText.style.display = 'none';
         }

@@ -12,6 +12,11 @@ let eventFunctions = [
         dataFrom: "b.word",
         priority: 0
     },{
+        functionToCall: DisplayWaitingForPlayers,
+        activators: ["b.gameState"],
+        dependencies: ["b.gameState"],
+        priority: 0
+    },{
         functionToCall: UpdateLanguageDirection,
         activators: ["b.languageDirection"],
         dependencies: ["b.languageDirection"],
