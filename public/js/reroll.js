@@ -6,7 +6,7 @@ const rerollBlockOriginalDisplayStyle = rerollBlock.style.display;
 rerollCheckbox.addEventListener('change', () => {
     thisUser.reroll = rerollCheckbox.checked;
     UpdateRerollBlock();
-    socket.emit('f.reroll', thisUser)
+    socket.emit('f.reroll', thisUser.reroll)
 });
 
 let rerollUsed = false;

@@ -1,10 +1,16 @@
 let eventsCalled = {}; //stores for each event whether it was called at least once
 
-//functions that get called when events are activated
+//functions that get called when events are activated  
 //if one of their dependency events wasnt called atleast once, they dont get called
 //if one event leads to multiple functions getting called, the priority determains the order
 //activateWhenDependenciesTurnTrue makes it so if all dependencies turn true and the function was never called, it gets called even if the event wasnt an activator
 let eventFunctions = [
+    {
+        functionToCall: HardRefresh,
+        activators: ["b.disconnected"],
+        dependencies: [],
+        priority: 0
+    },
     {
         functionToCall: DisplayWord,
         activators: ["b.gameState", "b.users", "b.word", "b.languageDirection"],

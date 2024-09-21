@@ -19,20 +19,58 @@ const gameRooms = {};
 io.on('connection', (socket) => {
   console.log('a user connected');
 
-  //someone submitted their username and 
+  // Set up the default onAny listener
+  const listener = (event, ...args) => {
+    if (event !== 'f.user') { // Skip the check for 'f.user' event
+        socket.emit('b.disconnected', null);
+        console.log("user out of lobby");
+    }
+  };
+  socket.onAny(listener); // Attach the listener on connection
+
   socket.on('f.user', (data) => {
     const { newUser, roomCode, language } = data;
-    if(gameRooms[roomCode])
+
+    socket.offAny(listener);
+
+    if(CheckUserData(newUser, roomCode, language))
     {
-      gameRooms[roomCode].PlayerConnected(socket, newUser)
+      if(gameRooms[roomCode])
+        {
+          gameRooms[roomCode].PlayerConnected(socket, newUser)
+        }
+        else
+        {
+          gameRooms[roomCode] = new GameRoom(socket, newUser, roomCode, language);
+        }
     }
-    else
-    {
-      gameRooms[roomCode] = new GameRoom(socket, newUser, roomCode, language);
-    }
+
   });
 
-}); 
+});
+
+function CheckUserData(newUser, roomCode, language) {
+  
+  // Define the maximum character limit for roomCode
+  const maxRoomCodeLength = 20; // Adjust as needed
+  const supportedLanguages = ['english', 'hebrew']; // Add any additional languages here
+
+  // Check roomCode
+  if (typeof roomCode !== 'string' || roomCode.length > maxRoomCodeLength) {
+    console.error('Invalid roomCode: must be a string with a reasonable character limit.');
+    return false; // or throw an error, or handle accordingly
+  }
+
+  // Check language
+  if (!supportedLanguages.includes(language)) {
+    console.error('Invalid language: must be one of the supported languages.');
+    return false; // or throw an error, or handle accordingly
+  }
+
+  // If both checks pass, you can return true or proceed with your logic
+  return true;
+}
+
 
 function EmitToUsersArray(usersToEmit, eventName, eventData)
 {
@@ -203,7 +241,7 @@ class GameRoom {
 
   //REROLL--------------------------------------------------------------------------------------------------------------------------------------------
 
-  HandleReroll(socket, fUser)
+  HandleReroll(socket, fRerollValue)
   {
 
     if(this.gameState != "inProgress")
@@ -214,7 +252,7 @@ class GameRoom {
 
     let user = this.users[socket.id];
 
-    user.reroll = fUser.reroll;
+    user.reroll = !!fRerollValue;
 
     let usersArray = this.GetUsersArray();
     if(usersArray.filter(x => x.drawing && x.reroll).length >= Math.ceil(usersArray.filter(x => x.drawing).length * 0.75))
@@ -277,7 +315,6 @@ class GameRoom {
   {
     this.squares = Array.from({ length: this.gridWidth }, (row, rowIndex) =>
       Array.from({ length: this.gridHeight }, (col, colIndex) => ({
-        on: false,
         x: rowIndex,
         y: colIndex,
         color: '#ffffff',
@@ -297,48 +334,82 @@ class GameRoom {
   }
 
   HandlePaintingSquares(socket, fSquares) {
-    try {
 
+    try {
       let acceptedSquares = [];
       let rejectedSquares = [];
-    
+  
+      // Define a list of valid colors
+      const validColors = ["#0f0f0f", '#5f5f5f', '#880015', '#ed1c24', 
+        , '#ff7f27', '#fff200', '#22b14c', '#00a2e8', '#3f48cc',  '#a349a4',
+        '#ffffff', '#c3c3c3', '#b97a57', '#ffaec9', '#ffc90e', '#efe4b0',
+        '#b5e61d', '#99d9ea', '#7092be', '#c8bfe7'
+        ];
+  
+      // Check if fSquares is a valid array
+      if (!Array.isArray(fSquares)) {
+        console.error('Invalid fSquares input: not an array');
+        return;
+      }
+  
       fSquares.forEach(fSquare => {
-
-        let square = this.squares[fSquare.x][fSquare.y];
-
+        // Validate each fSquare object (checking if x, y, and color exist and are valid)
         if (
-              (
-                this.gameState === "waitingForPlayers"
-                ||
-                (
-                  square.ownerId === socket.id
-                  && 
-                  this.gameState === "inProgress"
-                ) 
-              ) 
-              &&
-              this.users[socket.id].drawing
+          typeof fSquare.x !== 'number' || 
+          typeof fSquare.y !== 'number' || 
+          typeof fSquare.color !== 'string' || 
+          !validColors.includes(fSquare.color) // Ensure the color is in the valid color list
+        ) {
+          console.error('Invalid square data or color not in list:', fSquare);
+          return;
+        }
+  
+        // Access the corresponding square in this.squares array
+        let square;
+        try {
+          square = this.squares[fSquare.x][fSquare.y];
+        } catch (error) {
+          console.error(`Error accessing square at (${fSquare.x}, ${fSquare.y}):`, error);
+          return;
+        }
+
+        if (!square) {
+          console.error(`Square does not exist at (${fSquare.x}, ${fSquare.y})`);
+          return; // Exit the function if the square is not defined
+        }
+
+        // Check game state, square ownership, and if user is drawing
+        if (
+          (
+            this.gameState === "waitingForPlayers"
+            ||
+            (
+              square.ownerId === socket.id
+              && this.gameState === "inProgress"
             )
-        {
+          ) && this.users[socket.id].drawing
+        ) {
           square.color = fSquare.color;
           acceptedSquares.push(square);
         } else {
           rejectedSquares.push(square);
         }
-
       });
-    
+  
       // Emit accepted squares as an array
       if (acceptedSquares.length > 0) {
         this.EmitToEveryone('b.squares', acceptedSquares);
       }
-    
+  
       // Emit rejected squares as an array
       if (rejectedSquares.length > 0) {
         socket.emit('b.squares', rejectedSquares);
       }
-    } catch (error) {console.error(error)}
+    } catch (error) {
+      console.error(error);
+    }
   }
+  
   
   //PLAYERS---------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -461,13 +532,21 @@ class GameRoom {
   HandleMessage(socket, fMessage)
   {
     try {
+          if (!(fMessage && typeof fMessage.content === 'string' && fMessage.content.trim() !== '')) {
+            console.error('Invalid message content:', fMessage);
+            return;
+          }
+
           let currentUser = this.users[socket.id]; 
-          fMessage.authorId = socket.id;
-          fMessage.system = false;
+          let bMessage = {
+            content: fMessage.content,
+            authorId: socket.id,
+            system: false
+          };
       
-          if(fMessage.content[0]=='/')
+          if(bMessage.content[0]=='/')
           {
-            this.HandleCommand(socket.id, fMessage);
+            this.HandleCommand(socket.id, bMessage);
           }
           else
           {
@@ -479,39 +558,39 @@ class GameRoom {
               if(currentUser.drawing)
                 {
                   sendTo = this.GetUsersArray().filter(x => x.guessed || x.id == socket.id)
-                  EmitToUsersArray(sendTo, 'b.message', fMessage)
+                  EmitToUsersArray(sendTo, 'b.message', bMessage)
                 }
           
                 //guessed - send to people who guessed or are drawing
                 else if(currentUser.guessed)
                 {
                   sendTo = this.GetUsersArray().filter(x => x.guessed || x.drawing)
-                  EmitToUsersArray(sendTo, 'b.message', fMessage)
+                  EmitToUsersArray(sendTo, 'b.message', bMessage)
                 }
           
                 //guessing - send to everyone unless its correct or close
                 else 
                 {
-                  if(this.wordObject.IsEquivelentToString(fMessage.content))
+                  if(this.wordObject.IsEquivelentToString(bMessage.content))
                   {
                     this.UserGuessedRight(currentUser);
                   }
-                  else if(this.wordObject.IsCloseToString(fMessage.content)){
+                  else if(this.wordObject.IsCloseToString(bMessage.content)){
                     let message = {
-                      content: fMessage.content + " is CLOSE!",
+                      content: bMessage.content + " is CLOSE!",
                       system: true
                     }
                     this.SendMessage(message, [currentUser]);
                   }
                   else
                   {
-                    this.EmitToEveryone('b.message', fMessage)
+                    this.EmitToEveryone('b.message', bMessage)
                   }
                 }
             }
             else
             {
-              this.EmitToEveryone('b.message', fMessage)
+              this.EmitToEveryone('b.message', bMessage)
             }
           }
     } catch (error) {console.error(error)}
