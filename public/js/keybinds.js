@@ -1,5 +1,4 @@
 document.onkeydown = checkKey;
-let prevSelectedColor;
 
 function checkKey(evt) {
     const formElements = ['INPUT', 'TEXTAREA', 'SELECT', 'OPTION'];
@@ -12,18 +11,5 @@ function checkKey(evt) {
 
     if (evt.code === 'KeyB' || evt.code === 'KeyG') {
         ToggleBucket(); // Ensure this function is defined
-    } else if (evt.code === 'KeyE') {
-
-        if(selectedColor === "#ffffff")
-        {
-            if (prevSelectedColor) {
-                selectColorByHex(prevSelectedColor)
-            }
-        }
-        else
-        {
-            prevSelectedColor = selectedColor; 
-            selectColorByHex("#ffffff")
-        }
-    }
+    } 
 }
