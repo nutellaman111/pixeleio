@@ -115,6 +115,15 @@ class GameRoom {
 
   NewRound()
   {
+    if(!this.GetUsersArray().length)
+    {
+      this.KillRoom();
+    }
+    if(this.dead)
+    {
+      return;
+    }
+
     clearInterval(this.hintsInterval);
 
     if(this.wordObject)
@@ -419,21 +428,31 @@ class GameRoom {
   HandleDisconnect(socket, reason)
   {
     try {
-      if(this.users[socket.id])
-        {
-          let message = {
-            content: this.users[socket.id].name + " has left",
-            system: true
-          }
-          this.SendMessage(message)
-      
-          delete this.users[socket.id];
 
-      
-          this.OnPlayersChangeIncludingDrawingStatus();
-        }
+      let message = {
+        content: this.users[socket.id].name + " has left",
+        system: true
+      }
+      this.SendMessage(message)
+  
+      delete this.users[socket.id];
+
+      if(!this.GetUsersArray().length)
+      {
+        this.KillRoom();
+      }
+  
+      this.OnPlayersChangeIncludingDrawingStatus();
+
     } catch (error) {console.error(error)}
   
+  }
+
+  KillRoom()
+  {
+    this.dead = true;
+    delete gameRooms[this.roomCode];
+    console.log("room " + this.roomCode + " died");
   }
 
 
@@ -564,61 +583,83 @@ class GameRoom {
   //slash commands ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-  HandleCommand(socketId, message)
-  {
+  HandleCommand(socketId, message) {
     const parts = message.content.trim().split(/\s+/); // Split by spaces
     const commandName = parts[0]; // First part is the command name
     const parameters = parts.slice(1).map(param => {
-        if (!isNaN(param)) {
-            return Number(param); // Convert to number if it's a valid number
-        }
-        return param; // Leave it as a string if it's not a number
+        return isNaN(param) ? param : Number(param); // Convert to number if valid
     });
 
-    if(commandName == '/draw')
-    {
-      this.users[socketId].guessed = false;
-      this.users[socketId].drawing = true;
-      this.EmitToEveryone(this.users[socketId], 'b.rerollValue', this.rerollUsed)
-      this.OnPlayersChangeIncludingDrawingStatus();
+    // Input validation for each command
+    switch (commandName) {
+        case '/draw':
+            this.users[socketId].guessed = false;
+            this.users[socketId].drawing = true;
+            this.EmitToEveryone(this.users[socketId], 'b.rerollValue', this.rerollUsed);
+            this.OnPlayersChangeIncludingDrawingStatus();
+            break;
+
+        case '/guess':
+            this.users[socketId].guessed = false;
+            this.users[socketId].drawing = false;
+            this.OnPlayersChangeIncludingDrawingStatus();
+            break;
+
+        case '/guessed':
+            this.users[socketId].drawing = false;
+            this.users[socketId].guessed = true;
+            this.OnPlayersChangeIncludingDrawingStatus();
+            break;
+
+        case '/time':
+            if (parameters.length === 1 && !isNaN(parameters[0]) && parameters[0] > 0) {
+                this.roundDuration = parameters[0] * 1000;
+            } else {
+                console.error("Invalid time parameter.");
+            }
+            break;
+
+        case '/size':
+            const width = parameters[0];
+            const height = parameters[1];
+
+            if (parameters.length >= 1 && !isNaN(width) && width > 0 && width <= 20) {
+                this.gridWidth = width;
+                if (parameters.length > 1 && !isNaN(height) && height > 0 && height <= 20) {
+                    this.gridHeight = height;
+                } else {
+                    this.gridHeight = this.gridWidth; // Default to gridWidth if height is invalid
+                }
+                this.CreateBoard();
+                this.DivideBoard(true);
+                this.EmitToEveryone('b.canvas', this.squares);
+            } else {
+                console.error("Invalid size parameters.");
+            }
+            break;
+
+        case '/end':
+            this.RoundEnd();
+            break;
+
+        case '/restart':
+            this.NewRound();
+            break;
+
+        case '/difficulty':
+            if (parameters.length === 1 && !isNaN(parameters[0]) && parameters[0] > 0) {
+                this.maxHintsPercent = parameters[0];
+            } else {
+                console.error("Invalid difficulty parameter.");
+            }
+            break;
+
+        default:
+            console.error("Unknown command.");
+            break;
     }
-    if(commandName == '/guess')
-    {
-      this.users[socketId].guessed = false;
-      this.users[socketId].drawing = false;
-      this.OnPlayersChangeIncludingDrawingStatus();
-    }
-    else if(commandName == '/guessed')
-    {
-      this.users[socketId].drawing = false;
-      this.users[socketId].guessed = true;
-      this.OnPlayersChangeIncludingDrawingStatus();
-    }
-    else if(commandName == '/time')
-    {
-      this.roundDuration = parameters[0] * 1000;
-    }
-    else if(commandName == '/size')
-    {
-      this.gridWidth = parameters[0];
-      this.gridHeight = parameters[1] || this.gridWidth;
-      this.CreateBoard();
-      this.DivideBoard(true);
-      this.EmitToEveryone('b.canvas', this.squares)
-    }
-    else if(commandName == '/end')
-    {
-      this.RoundEnd();
-    }
-    else if(commandName == '/restart')
-    {
-      this.NewRound();
-    }
-    else if(commandName == '/difficulty')
-    {
-      this.maxHintsPercent = parameters[0]; 
-    }
-  }
+}
+
 }
 
 

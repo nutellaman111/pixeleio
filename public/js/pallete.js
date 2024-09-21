@@ -8,6 +8,9 @@ const colors = [darkGray, '#5f5f5f', '#880015', '#ed1c24',
     '#b5e61d', '#99d9ea', '#7092be', '#c8bfe7'
 ]; // Add more colors as needed
 
+
+const colorsAndTools = document.getElementById('colorsAndTools');
+
 function createColorButtons() {
   const colorPalette = document.getElementById('colorPalette');
 
