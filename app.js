@@ -1,4 +1,4 @@
-const {DivideSquaresToPeople, AreWordsClose, AreWordsEquivelent} = require('./utils.js');
+const {DivideSquaresToPeople, AssignRolesAndDivideBoard} = require('./utils.js');
 const { GetDictionary } = require('./dictionaries.js');
 
 
@@ -130,9 +130,8 @@ class GameRoom {
       x.reroll = false;
       x.guessed = false;
     })
-    this.AssignRoles();
     this.CreateBoard();
-    this.DivideBoard(false);
+    AssignRolesAndDivideBoard(this.squares, this.GetUsersArray())
     this.SetRandomWord();
     this.rerollUsed = false;
     this.gameState = "inProgress";
@@ -347,35 +346,6 @@ class GameRoom {
       return [];
   }
 
-  AssignRoles()
-  {
-    //decay the amount of times drawn
-    let usersArr = this.GetUsersArray();
-    usersArr.forEach(user => {
-      user.timesDrawing /= 2;
-    })
-
-    const shuffledUsers = this.GetUsersArray().sort(() => Math.random() - 0.5).sort((a, b) => a.timesDrawing - b.timesDrawing );
-
-    let drawersCount;
-    if(shuffledUsers.length < 3)
-    {
-      drawersCount = 1;
-    }
-    else
-    {
-      let min = 2;
-      let max = shuffledUsers.length - 1;
-      drawersCount = Math.floor(Math.random() * (max - min + 1)) + min;
-    }
-
-    shuffledUsers.forEach((user, index) => {
-      user.drawing = index < drawersCount;
-      user.timesDrawing += user.drawing? 1: 0;
-    }); 
-
-    return shuffledUsers; // return the modified array if needed
-  }
 
   OnPlayersChangeIncludingDrawingStatus()
   {

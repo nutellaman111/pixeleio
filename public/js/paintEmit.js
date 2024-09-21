@@ -1,7 +1,7 @@
 
 let bucketSelected = false;
 
-{
+
 
 //clear tool---------------------------------------------------------
 // Select the button
@@ -52,6 +52,15 @@ function DeselectBucket()
   bucketSelected = false;
   bucketCheckbox.checked = false;
 }
+
+function ToggleBucket()
+{
+  bucketSelected = !bucketSelected;
+  bucketCheckbox.checked = bucketSelected;
+}
+
+
+
 
 //mouse----------------------------------------------------------------
   const mouse = {
@@ -193,5 +202,5 @@ function DeselectBucket()
     socket.emit('f.squares', ownedColoredSquares);
   }
   
-}
+
 
